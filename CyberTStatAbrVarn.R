@@ -1,42 +1,3 @@
-
-
-Lambda <- 4;
-
-
-MinProbes <- 2;
-MinArrays <- 4;  
-
-#PARAMETERS FOR LOWESS
-LowessfParam <- 0.4;
-
-#PARAMETERS FOR HUBER/MAD ESTIMATOR
-HuberConf <- 1.345; #(ie 95% Confidence Limit)
-HuberTol <- 1e-6;
-
-
-            ################# INPUT / OUTPUT  #################
-
-PlotResults <- TRUE;
-
-InputDirectory <- "/home/kirkb/Playarea/Bayesian Clustering/RockWeb/Linux/Data/Lowess/";
-
-ProbesetFiles <- c("S730.LowPset", "F730.LowPset",
-                   "S806.LowPset", "F806.LowPset",
-                   "S812.LowPset", "F812.LowPset",
-                   "S924.LowPset", "F924.LowPset");
-HeaderLength <- 9;  #DO NOT EDIT
-
-GenomeDirectory <- "/home/kirkb/Playarea/Bayesian Clustering/Distribution Depend/Data/Input/GenomeCrawlerSuite/"
-
-GenomeFile <- "SPyM1Table.txt";
-GenomeIDPos <- 6;   #DO NOT EDIT
-GenomeHeaderLength <- 0;   #DO NOT EDIT
-
-
-
-OutputDirectory <- "/home/kirkb/Playarea/Bayesian Clustering/Distribution Depend/Data/Input/CyberT/test/";
-OutputFile <- "G8bA8P2tStat";
-
 #This software is a rerelease of CyberTOR_WY.R module of Microarray Expression
 #Potential Suite with alterations in the input and ouput format in order to
 #improve transition between modules of eMESS.
@@ -520,191 +481,6 @@ rm(list=ls(pat="^temp"));
 rm(list=ls(pat="^Per"));
 rm(list=ls(pat="^Next"));
 
-postscript(file=paste("/home/kirkb/Playarea/Bayesian Clustering/Presentations/Thinking/temp/logpvsnBHMicro.eps", sep=""),  horizontal=TRUE, onefile=TRUE);
-
-
-#x11(width=11, height=8);
-
-y <- log10(TBHpValue[,1]);
-x <- length(TBHpValue[,1]):1;
-
-plot(y~x, type="p",
-     xlab="", ylab="", xlim=c(300, max(x)),
-                       ylim=c(min(y), -0.4),
-     cex=2, pch=1, col="black");
-
-y <- log10(TBHpValue[,3]);
-points(x, y, cex=2, pch=1, col="red");
-
-y <- log10(TBHpValue[,6]);
-points(x, y, cex=2, pch=1, col="orange");
-
-y <- log10(TBHpValue[,10]);
-points(x, y, cex=2, pch=1, col="yellow");
-
-y <- log10(TBHpValue[,16]);
-points(x, y, cex=2, pch=1, col="green");
-
-y <- log10(TBHpValue[,18]);
-points(x, y, cex=2, pch=1, col="blue");
-
-legend(300, -0.6, c("Null", "0", "4", "8", "10", "16"), cex=2, pch=1, col=c("black", "red", "orange", "yellow", "green", "blue"));
-
-dev.off();
-
-
-
-postscript(file=paste("/home/kirkb/Playarea/Bayesian Clustering/Presentations/Thinking/temp/logpvslognBHMicro.eps", sep=""),  horizontal=TRUE, onefile=TRUE);
-
-
-#x11(width=11, height=8);
-
-y <- log10(TBHpValue[,1]);
-x <- log10(length(TBHpValue[,1]):1);
-
-plot(y~x, type="p",
-     xlab="", ylab="", xlim=c(2.5, max(x)),
-                       ylim=c(min(y), -0.4),
-     cex=2, pch=1, col="black");
-
-y <- log10(TBHpValue[,3]);
-points(x, y, cex=2, pch=1, col="red");
-
-y <- log10(TBHpValue[,6]);
-points(x, y, cex=2, pch=1, col="orange");
-
-y <- log10(TBHpValue[,10]);
-points(x, y, cex=2, pch=1, col="yellow");
-
-y <- log10(TBHpValue[,16]);
-points(x, y, cex=2, pch=1, col="green");
-
-y <- log10(TBHpValue[,18]);
-points(x, y, cex=2, pch=1, col="blue");
-
-legend(2.5, -0.6, c("Null", "1", "4", "8", "10", "16"), cex=2, pch=1, col=c("black", "red", "orange", "yellow", "green", "blue"));
-
-dev.off();
-#######
-
-
-
-postscript(file=paste("/home/kirkb/Playarea/Bayesian Clustering/Presentations/Thinking/temp/logpvslogTMicrodof3L14.eps", sep=""),  horizontal=TRUE, onefile=TRUE);
-
- 
-#x11(width=11, height=8);
-Column <- 12;
-
-y <- log10(TSidakpValue[,Column]);
-x <- log10(TRankedtStat[,Column]);
-
-plot(y~x, type="p",
-     xlab="", ylab="", xlim=c(min(x), max(x)),
-                       ylim=c(min(log10(TPhenompValue[,Column])),0),
-     cex=2, pch=1, col="red");
-
-
-y <- log10(TFreqpValue[,Column]);
-x <- log10(TRankedtStat[,Column]);
-
-points(x, y, cex=2, pch=1, col="blue");
-
-
-y <- log10(TBHpValue[,Column]);
-x <- log10(TRankedtStat[,Column]);
-
-points(x, y, cex=2, pch=1, col="green");
-
-y <- log10(TPhenompValue[,Column]);
-x <- log10(TRankedtStat[,Column]);
-
-points(x, y, cex=2, pch=1, col="black");
-
-
-legend(-3.3, -4, c("Phenom", "BH", "Freq", "Sidak"), cex=2, pch=1, col=c("black", "green", "blue", "red"));
-
-dev.off();
-
-
-postscript(file=paste("/home/kirkb/Playarea/Bayesian Clustering/Presentations/Thinking/temp/pvsTMicrodof3L14.eps", sep=""),  horizontal=TRUE, onefile=TRUE);
-
-
-#x11(width=11, height=8);
-
-Column <- 12;
-
-y <- TSidakpValue[,Column];
-x <- TRankedtStat[,Column];
-
-plot(y~x, type="p",
-     xlab="", ylab="", xlim=c(min(x), max(x)),
-                       ylim=c(min(TPhenompValue[,Column]),
-                              max(TPhenompValue[,Column])),
-     cex=2, pch=1, col="red");
-
-
-y <- TFreqpValue[,Column];
-x <- TRankedtStat[,Column];
-
-points(x, y, cex=2, pch=1, col="blue");
-
-
-y <- TBHpValue[,Column];
-x <- TRankedtStat[,Column];
-
-points(x, y, cex=2, pch=1, col="green");
-
-y <- TPhenompValue[,Column];
-x <- TRankedtStat[,Column];
-
-points(x, y, cex=2, pch=1, col="black");
-
-
-legend(7, 1, c("Phenom", "BH", "Freq", "Sidak"), cex=2, pch=1, col=c("black", "green", "blue", "red"));
-
-dev.off();
-
-
-postscript(file=paste("/home/kirkb/Playarea/Bayesian Clustering/Presentations/Thinking/temp/pvsTMicrodof3", as.character(Lambda), ".eps", sep=""),  horizontal=TRUE, onefile=TRUE);
-
-
-#x11(width=11, height=8);
-
-
-y <- SidakpValue;
-x <- RankedtStat;
-
-plot(y~x, type="p",
-     xlab="", ylab="", xlim=c(min(x), max(x)),
-                       ylim=c(min(PhenompValue), max(y)),
-     cex=2, pch=1, col="red");
-
-
-y <- FreqpValue;
-x <- RankedtStat;
-
-points(x, y, cex=2, pch=1, col="blue");
-
-
-y <- BHpValue;
-x <- RankedtStat;
-
-points(x, y, cex=2, pch=1, col="green");
-
-y <- PhenompValue;
-x <- RankedtStat;
-
-points(x, y, cex=2, pch=1, col="black");
-
-
-legend(12.6, 1, c("Phenom", "BH", "Freq", "Sidak"), cex=2, pch=1, col=c("black", "green", "blue", "red"));
-
-dev.off()
-
-
-
-
- 
                        ############################
                        #####  OUTPUT RESULTS  #####
                        ############################
@@ -714,13 +490,13 @@ dev.off()
 #Combine vectors into a table for output
 CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter], pValue, PhenompValue,
                        FreqpValue,
-                       EstpValue, BHpValueT, WYpValue, BHpValue, BonpValue,
+                       BHpValue, BonpValue,
                        SidakpValue, HolmpValue, HochpValue,
                        tStat=tStat[tStatFilter],
                        LogFoldChange=LogFoldChange[tStatFilter],
                        AdjStndErr=AdjustedStndErr[tStatFilter],
                        ArrayNumber=ArrayNumber[tStatFilter],
-                       RMSIntensity=Intensity[tStatFilter], BStat, 
+                       RMSIntensity=Intensity[tStatFilter], 
                        BGStDev=BGStDev[tStatFilter],
                        StDev=LogFoldStndDev[tStatFilter],
                        StndErr=StndErr[tStatFilter]);
@@ -736,14 +512,11 @@ FilterHeader7 <- paste("LowessfParam = ", as.character(LowessfParam),
                          sep="");          
 FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
-FilterHeader9 <- c("Algorithm = Benjamini-Hochberg",
-                   paste("Permutation Number = ",
-                       as.character(TotalPermutations), sep=""));
 FilterHeaderTable <-  c("Rank", "ID", "pValue", "PhenompValue",
-                        "FreqpValue", "EstpValue", "BHpValueT", "WYpValue",
+                        "FreqpValue",
                         "BHpValue", "BonpValue", "SidakpValue", "HolmpValue",
                         "HochpValue", "tStat", "LogFoldChng", "AdjStndErr",
-                        "ArrayNumber", "RMSIntens", "BStat", "BGStDev",
+                        "ArrayNumber", "RMSIntens", "BGStDev",
                         "StDev", "StndErr");
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
@@ -783,11 +556,6 @@ cat(FilterHeader8, file=paste(OutputPrefix, "L",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
                      ".CyTBH", sep=""), sep="\n", append=TRUE);
-cat(FilterHeader9, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
-                     append=TRUE);
-cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
 cat(FilterHeaderTable, file=paste(OutputPrefix, "L",
                          as.character(Lambda), ".CyTBH", sep=""), sep="\t",
                          append=TRUE);
@@ -815,7 +583,7 @@ GenePos <- 1:length(GenomeGenes);
 GeneNames <- GenomeGenes;
 
 
-DegreesOfFreedom <- Lambda - 1;
+DegreesOfFreedom <- Lambda - 2;
 #DegreesOfFreedom <- GeneArrayNumber - 1;
 
 pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
@@ -856,9 +624,7 @@ FilterHeader7 <- paste("LowessfParam = ", as.character(LowessfParam),
 
 FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
-FilterHeader9 <- c("Algorithm = Benjamini-Hochberg",
-                   paste("Permutation Number = ",
-                       as.character(TotalPermutations), sep=""));
+
 FilterHeaderTable <-  c("ID", "tStat", "pValue","BHpValue", "pValue Bon",  "Gene Pos");
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
@@ -898,11 +664,7 @@ cat(FilterHeader8, file=paste(OutputPrefix, "L",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
                      ".GeCyTBH", sep=""), sep="\n", append=TRUE);
-cat(FilterHeader9, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
-                     append=TRUE);
-cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+
 cat(FilterHeaderTable, file=paste(OutputPrefix, "L",
                          as.character(Lambda), ".GeCyTBH", sep=""),
                          sep="\t", append=TRUE);
@@ -917,4 +679,4 @@ rm(SingleGeneTable);
 
 #rm(list=ls());
 
-}
+
