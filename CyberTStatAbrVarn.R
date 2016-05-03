@@ -13,6 +13,8 @@
 #procedures", A. Reiner et al, Bioinformatics, 19(3), pp 368-375, 2003.
 
 
+
+
 #No part of this text or software may be used or reproduced in any matter
 #whatsoever without written permission, except in the case of brief quotations
 #embodied in critical articles of or for reviews.  For information address
@@ -182,8 +184,8 @@ xProbeNumberPos <- 4;
 
 
 #Load LNProbesetData for each array into a list of data.frames
-TotalArrayNumber <- length(ProbesetFiles);
-ArrayList <- vector("list", TotalArrayNumber);
+TotArray <- length(ProbesetFiles);
+ArrayList <- vector("list", TotArray);
 m <- 0;
 for (Array in ProbesetFiles) {
   m <- m + 1;
@@ -203,7 +205,7 @@ zProbeNumberVec  <- as.numeric(as.vector(
 
 ArrayID <- rep(1, length(IDVec));
 
-for (n in 2:TotalArrayNumber) {
+for (n in 2:TotArray) {
   
   tempIDVec <- as.character(as.vector(
                                  ArrayList[[n]][,xIDPos]));
@@ -236,25 +238,29 @@ ArrayID <- ArrayID[ProbeFilter];
   
 #Filter for matched pairs ArrayIDs 1&2 3&4 5&6 7&8
 
-MatchArrayFilter <- 0;
-for (n in 2*(1:(TotalArrayNumber/2))) {
-  MatchArrayFilter <- c(MatchArrayFilter,
+if (MatchedArrays) {
+    MatchArrayFilter <- 0;
+    for (n in 2*(1:(TotArray/2))) {
+        MatchArrayFilter <- c(MatchArrayFilter,
                         as.logical(match(IDVec[which(ArrayID==n-1)],
                                       IDVec[which(ArrayID==n)], nomatch=0)));
 
-  MatchArrayFilter <- c(MatchArrayFilter,
+        MatchArrayFilter <- c(MatchArrayFilter,
                         as.logical(match(IDVec[which(ArrayID==n)],
                                       IDVec[which(ArrayID==n-1)], nomatch=0)));
 
+    }
+
+    MatchArrayFilter <- as.logical(MatchArrayFilter[2:length(MatchArrayFilter)]);
+
+    IDVec <- IDVec[MatchArrayFilter];
+    LogFoldVec <- LogFoldVec[MatchArrayFilter];
+    zRMSIntensityVec <- zRMSIntensityVec[MatchArrayFilter];
+    zProbeNumberVec <- zProbeNumberVec[MatchArrayFilter];
+    ArrayID <- ArrayID[MatchArrayFilter];
+
 }
 
-MatchArrayFilter <- as.logical(MatchArrayFilter[2:length(MatchArrayFilter)]);
-
-IDVec <- IDVec[MatchArrayFilter];
-LogFoldVec <- LogFoldVec[MatchArrayFilter];
-zRMSIntensityVec <- zRMSIntensityVec[MatchArrayFilter];
-zProbeNumberVec <- zProbeNumberVec[MatchArrayFilter];
-ArrayID <- ArrayID[MatchArrayFilter];
 
 
 #Input Ordered Genes from Annotated Genome
@@ -305,9 +311,54 @@ LogFoldChange <- as.numeric(as.vector(
 LogFoldStndDev <- as.numeric(as.vector(
                                   zLogFoldHuberReport[zTotHuberSetFilter, 3]));
 
-ArrayNumber <- as.numeric(as.vector(zRMSHuberReport[zTotHuberSetFilter, 4]));
+TotArrays <- as.numeric(as.vector(zRMSHuberReport[zTotHuberSetFilter, 4]));
 
-StndErr <- LogFoldStndDev/sqrt(ArrayNumber/2);
+
+if (MatchedArrays) {
+
+    TotBiosamples <- TotArrays/2;
+
+} else {
+
+    TotBiosamples <- 0;
+    for (i in 1:length(HuberGenes)) {
+        
+        BiosampleFilter <- as.logical(match(IDVec, HuberGenes[i], nomatch=0));
+        PickedArrayID <- ArrayID[BiosampleFilter];
+
+        count <- 0;
+        Flag1 <- FALSE;
+        Flag2 <- FALSE;
+        Flag3 <- FALSE;
+        Flag4 <- FALSE;
+        for (j in 1:length(PickedArrayID)) {
+
+            if (!Flag1 & (PickedArrayID[j] == 1|PickedArrayID[j] == 2)) { 
+                count <- count + 1;
+                Flag1 <- TRUE;
+            }    
+            if (!Flag2 & (PickedArrayID[j] == 3|PickedArrayID[j] == 4)) {
+                count <- count + 1;
+                Flag2 <- TRUE;
+            }
+            if (!Flag3 & (PickedArrayID[j] == 5|PickedArrayID[j] == 6)) {
+                count <- count + 1;
+                Flag3 <- TRUE;
+            } 
+            if (!Flag4 & (PickedArrayID[j] == 7|PickedArrayID[j] == 8)) {
+                count <- count + 1;
+                Flag4 <- TRUE;
+            }
+
+        }
+
+        TotBiosamples <- c(TotBiosamples, count);
+    }
+    TotBiosamples <- TotBiosamples[2:length(TotBiosamples)];
+}
+
+
+StndErr <- LogFoldStndDev/sqrt(TotBiosamples);
 
 ### Remove non Gene Probes and unrepresented genes in annotation
 GenomeFilter <- as.logical(as.vector(
@@ -321,7 +372,9 @@ LogFoldChange <- LogFoldChange[GenomeFilter];
 
 LogFoldStndDev <- LogFoldStndDev[GenomeFilter];
 
-ArrayNumber <- ArrayNumber[GenomeFilter];
+TotArrays <- TotArrays[GenomeFilter];
+
+TotBiosamples <- TotBiosamples[GenomeFilter];
 
 StndErr <- StndErr[GenomeFilter];
 
@@ -353,14 +406,14 @@ BGStDev <- BGStDev[2:(length(BGStDev))]
 nu <- 0;
 xAdjustedVar <- 0;
 for (k in 1:length(HuberGenes)) {
-  if (ArrayNumber[k]/2 >= Lambda) {
+  if (TotBiosamples[k] >= Lambda) {
     tempnu <- 0;
     } else {
-      tempnu <- Lambda - ArrayNumber[k]/2;
+      tempnu <- Lambda - TotBiosamples[k];
     }
   xSigmaSquared <- (tempnu * BGStDev[k]^2 +
-       (ArrayNumber[k]/2-1) * LogFoldStndDev[k]^2)/
-           (tempnu + ArrayNumber[k]/2-2);
+       (TotBiosamples[k]-1) * LogFoldStndDev[k]^2)/
+           (tempnu + TotBiosamples[k]-2);
     
   xAdjustedVar <- c(xAdjustedVar, xSigmaSquared);
   nu <- c(nu, tempnu);
@@ -423,24 +476,40 @@ rm(list=ls(pat="^y"));
            ####    PERFORM t-test AND CALCULATE pVALUES   #### 
            ###################################################
 
+
 #Calculate t-Test statistic using a pairwise t-Test with log fold data
-#tStat <- abs(LogFoldChange/StndErr);
 tStat <- abs(LogFoldChange/AdjustedStndErr);
 
-#Calculate pValue with Bonferroni Correction for comparison
+#Calculate pValue for tStat with AdjStndError
 tStatFilter <- order(tStat, decreasing=TRUE);
 RankedtStat <- tStat[tStatFilter];
-RankedArrayNumber <- ArrayNumber[tStatFilter];
+RankedTotBiosamples <- TotBiosamples[tStatFilter];
 
+DegreesOfFreedom <- Lambda - 2;
+pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
+
+#Calculate pValue for tStat with StndError
+tStatNoCyberT <- abs(LogFoldChange/StndErr);  #For no CyberT
+RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; #For no CyberT
+
+DOFnoCyberT <- RankedTotBiosamples - 1;   #For no CyberT
+pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
+
+#Calculate pValue for tStat with BGStndDev/sqrt(BioSamples)
+BGStndErr <- BGStDev/sqrt(TotBiosamples);   #For no Lambda
+tStatBGCyberT <- abs(LogFoldChange/BGStndErr);  #For no Lambda
+RankedtStatBGCyberT <- tStatBGCyberT[tStatFilter]; #For no Lambda
+
+DOFnoLambda <- RankedTotBiosamples - 1;   #For no Lambda
+pValueBGCyberT <- 2 * (1 - pt(RankedtStatBGCyberT, DOFnoLambda));
+
+
+
+#################Calculate Multiplicity p-values for CyberT###############
 xNumOfHyp <- length(RankedtStat);
 Rank <- 1:xNumOfHyp;
 
 FreqpValue <- Rank/xNumOfHyp;
-
-
-DegreesOfFreedom <- Lambda - 2;
-#DegreesOfFreedom <- RankedArrayNumber/2 - 1;
-pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
 
 BHpValue <- pValue * xNumOfHyp / Rank;
 BHpValue[which(BHpValue > 1)] <- 1;
@@ -469,11 +538,6 @@ for (i in Rank) {
   HochpValue[i] <- min(HochpValue[i:xNumOfHyp]);   
 }
 
-TRankedtStat <-  RankedtStat;
-TBHpValue <- BHpValue;
-TFreqpValue <- FreqpValue;
-TPhenompValue <- PhenompValue;
-TSidakpValue <- SidakpValue;
 
 rm(ArrayList)
 rm(list=ls(pat="^x"));
@@ -488,36 +552,46 @@ rm(list=ls(pat="^Next"));
 
 
 #Combine vectors into a table for output
-CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter], pValue, PhenompValue,
-                       FreqpValue,
-                       BHpValue, BonpValue,
-                       SidakpValue, HolmpValue, HochpValue,
-                       tStat=tStat[tStatFilter],
+CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter],
                        LogFoldChange=LogFoldChange[tStatFilter],
-                       AdjStndErr=AdjustedStndErr[tStatFilter],
-                       ArrayNumber=ArrayNumber[tStatFilter],
                        RMSIntensity=Intensity[tStatFilter], 
+                       RankedTotBiosamples,
+                       TotArrays=TotArrays[tStatFilter],
+                       pValue, PhenompValue, pValueBGCyberT, pValueNoCyberT, 
+                       FreqpValue, BHpValue, BonpValue, SidakpValue,
+                       HolmpValue, HochpValue,
+                       RankedtStat, tStatBGCyberT, tStatNoCyberT,  
+                       AdjStndErr=AdjustedStndErr[tStatFilter],
+                       BGStndErr=BGStndErr[tStatFilter],
+                       StndErr=StndErr[tStatFilter],
+                       AdjStndDev=AdjustedStndDev[tStatFilter],
                        BGStDev=BGStDev[tStatFilter],
-                       StDev=LogFoldStndDev[tStatFilter],
-                       StndErr=StndErr[tStatFilter]);
+                       StDev=LogFoldStndDev[tStatFilter]);
 
+
+
+#NEED TO ADD MATCHEDARRAYS FLAG!!!!!!!!!!!!!!!!!!!!!!!!!!
 FilterHeader1 <- paste("Input Directory = ", InputDirectory, sep="");
 FilterHeader2 <- c("NormFiles = ", paste(as.character(ProbesetFiles),
                                              sep=""));
 FilterHeader3 <- date();
 FilterHeader4 <- paste("Lambda = ", as.character(Lambda), sep="");
-FilterHeader5 <- paste("MinArrays = ", as.character(MinArrays), sep="");
-FilterHeader6 <- paste("MinProbes = ", as.character(MinProbes), sep="");   
+FilterHeader5 <- c(paste("MinArrays = ", as.character(MinArrays), sep=""),
+                   paste("MinProbes = ", as.character(MinProbes), sep=""));
+FilterHeader6 <- paste("MatchedArrays = ", as.character(MatchedArrays), sep="");
 FilterHeader7 <- paste("LowessfParam = ", as.character(LowessfParam),
                          sep="");          
 FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
-FilterHeaderTable <-  c("Rank", "ID", "pValue", "PhenompValue",
-                        "FreqpValue",
-                        "BHpValue", "BonpValue", "SidakpValue", "HolmpValue",
-                        "HochpValue", "tStat", "LogFoldChng", "AdjStndErr",
-                        "ArrayNumber", "RMSIntens", "BGStDev",
-                        "StDev", "StndErr");
+
+FilterHeaderTable <-  c("Rank", "ID", "LogFoldChange", "RMSIntensity",
+                        "TotBiosamples", "TotArrays", "pValue", "PhenompValue",
+                        "pValueBGCyberT", "pValueNoCyberT","FreqpValue",
+                        "BHpValue", "BonpValue", "SidakpValue",
+                        "HolmpValue", "HochpValue",
+                        "tStatCyberT", "tStatBGCyberT", "tStatNoCyberT",
+                        "AdjStndErr", "BGStndErr", "StndErr",
+                        "AdjStndDev", "BGStndDev", "StndDev");
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
                      as.character(Lambda), ".CyTBH", sep=""), sep="\n");
@@ -567,15 +641,16 @@ write.table(CyberTBHTable, file=paste(OutputPrefix, "L",
             col.names=FALSE, row.names=FALSE, append=TRUE);
 
 
+#### NEED TO WORK ON THIS OUTPUT FILE!!!!!!!!!!!!!!!!!
 
 ##################
-##  Single Genes
+##  Genes ordered to genome for GenomeCrawling
 ##################
 RankedGeneNames <- HuberGenes[tStatFilter];
-RankedArrayNumber <-  ArrayNumber[tStatFilter];
+RankedTotBiosamples <-  TotBiosamples[tStatFilter];
 
 GenetStat <- rep(0, length(GenomeGenes));
-GeneArrayNumber <- rep(0, length(GenomeGenes));
+GeneTotBiosamples <- rep(0, length(GenomeGenes));
 GeneBHpValue <- rep(1, length(GenomeGenes));
 GenepValue <- rep(1, length(GenomeGenes));
 GenepValueBon <- rep(1, length(GenomeGenes));
@@ -584,7 +659,7 @@ GeneNames <- GenomeGenes;
 
 
 DegreesOfFreedom <- Lambda - 2;
-#DegreesOfFreedom <- GeneArrayNumber - 1;
+#DegreesOfFreedom <- GeneTotBiosamples - 1;
 
 pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
 pValue[which(pValue > 1)] <- 1;
@@ -592,7 +667,7 @@ pValue[which(pValue > 1)] <- 1;
 pValueBon <- length(tStatFilter)*(2 * (1 - pt(RankedtStat, DegreesOfFreedom)));
 pValueBon[which(pValueBon > 1)] <- 1;
 
-#DegreesOfFreedom <- RankedArrayNumber - 1;
+#DegreesOfFreedom <- RankedTotBiosamples - 1;
 #pValueN <- length(tStatFilter)*(2 * (1 - pt(RankedtStat, DegreesOfFreedom)));
 #pValueN[which(pValueN > 1)] <- 1;
 

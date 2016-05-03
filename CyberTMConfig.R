@@ -1,10 +1,11 @@
 
 
-Lambda <- 4;
-
+Lambda <- 12;
 
 MinProbes <- 2;
 MinArrays <- 4;  
+
+MatchedArrays <- TRUE;
 
 #PARAMETERS FOR LOWESS
 LowessfParam <- 0.4;
