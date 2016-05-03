@@ -5,7 +5,11 @@ Lambda <- 5;
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- FALSE;
+MatchedArrays <- TRUE;
+
+MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
+BootstrapSample <- TRUE;
+TotalPermutations <- 1000;
 
 #PARAMETERS FOR LOWESS
 LowessfParam <- 0.4;

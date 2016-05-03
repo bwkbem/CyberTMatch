@@ -153,8 +153,18 @@ library(MASS);
                  ############################################
 
 #Define Output Dirctory with Prefix
-OutputPrefix <- paste(OutputDirectory, OutputFile,"A", as.character(MinArrays),
-                     "P", as.character(MinProbes), sep="");
+
+if (MatchedArrays) {
+    OutputPrefix <- paste(OutputDirectory, "m", OutputFile,"A",
+                          as.character(MinArrays), "P", as.character(MinProbes),
+                          sep="");
+} else {
+    OutputPrefix <- paste(OutputDirectory, "u", OutputFile,"A",
+                          as.character(MinArrays), "P", as.character(MinProbes),
+                          sep="");
+}
+
+
 
 
 #DEFINE GRAPHICS WINDOW SIZE
@@ -498,10 +508,8 @@ DOFnoCyberT <- RankedTotBiosamples - 1;   #For no CyberT
 pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
 
 
-
-
-
 #################Calculate Multiplicity p-values for CyberT###############
+
 xNumOfHyp <- length(RankedtStat);
 Rank <- 1:xNumOfHyp;
 
@@ -534,6 +542,70 @@ for (i in Rank) {
   HochpValue[i] <- min(HochpValue[i:xNumOfHyp]);   
 }
 
+######################### Permutation Methods ############################
+              #####    Perform Permutation Resampling  ####
+#All data will be referenced based on relative rank determined by t-test
+#statistic
+
+if (MultCorrPerm) {
+    BStat <- rep(0, length(tStat));
+    WYBStat <- rep(0, length(tStat));
+    B <- TotalPermutations;
+
+    IDVecFilter <- as.logical(match(IDVec, HuberGenes, nomatch=0));
+    PerIDVec <- IDVec[IDVecFilter];
+    PerIDVecf <- factor(PerIDVec);
+
+    PerLogFoldVector <- LogFoldVec[IDVecFilter];
+    PerArrayID <- ArrayID[IDVecFilter];
+
+    xNumOfHyp <- length(RankedtStat);
+    for (b in 1:B) {
+
+        if (BootstrapSample) {
+            PertStat <- sample(tStat, replace=TRUE);
+        } else {
+            PertStat <- sample(tStat);
+        }
+        
+        for (k in 1:xNumOfHyp) {
+            bStatk <- rep(0, xNumOfHyp);
+            tStatk <- rep(RankedtStat[k], xNumOfHyp);
+            bStatk[which(PertStat[1:xNumOfHyp] >= tStatk)] <- 1;
+            BStatk <- sum(bStatk);
+            BStat[k] <- BStat[k] + BStatk;
+            
+        }
+
+        UStat <- rep(0, xNumOfHyp);
+        UStat[xNumOfHyp] <- PertStat[xNumOfHyp];
+        WYBStat[xNumOfHyp] <- WYBStat[xNumOfHyp] + 1;
+        for (k in (xNumOfHyp-1):1) {
+            UStat[k] <- max(UStat[k+1], PertStat[k]);
+            if (UStat[k] >= RankedtStat[k]) {
+                WYBStat[k] <- WYBStat[k] + 1
+            }
+        }   
+    }
+
+    WYpValue <- WYBStat / B;
+
+    Rank <- 1:xNumOfHyp;
+    EstpValue <-  BStat/(xNumOfHyp * B);
+    
+    BHpValuePerm <- EstpValue * xNumOfHyp / Rank;
+    BHpValuePerm[which(BHpValuePerm > 1)] <- 1;
+    for (i in Rank) {
+        BHpValuePerm[i] <- min(BHpValuePerm[i:xNumOfHyp]);   
+    }   
+} else {
+    xNumOfHyp <- length(RankedtStat);
+    BHpValuePerm <- rep("NA", xNumOfHyp);
+    WYpValue <- rep("NA", xNumOfHyp);
+    TotalPermutations <- "NA";
+    BootstrapSample <- "NA";
+}
+
 
 rm(ArrayList)
 rm(list=ls(pat="^x"));
@@ -553,10 +625,10 @@ CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter],
                        RMSIntensity=Intensity[tStatFilter], 
                        RankedTotBiosamples,
                        TotArrays=TotArrays[tStatFilter],
+                       RankedtStat, RankedtStatNoCyberT,  
                        pValue, PhenompValue, pValueNoCyberT, 
                        FreqpValue, BHpValue, BonpValue, SidakpValue,
-                       HolmpValue, HochpValue,
-                       RankedtStat, tStatNoCyberT,  
+                       HolmpValue, HochpValue, BHpValuePerm, WYpValue,
                        AdjStndErr=AdjustedStndErr[tStatFilter],
                        StndErr=StndErr[tStatFilter],
                        AdjStndDev=AdjustedStndDev[tStatFilter],
@@ -574,16 +646,21 @@ FilterHeader4 <- paste("Lambda = ", as.character(Lambda), sep="");
 FilterHeader5 <- c(paste("MinArrays = ", as.character(MinArrays), sep=""),
                    paste("MinProbes = ", as.character(MinProbes), sep=""));
 FilterHeader6 <- paste("MatchedArrays = ", as.character(MatchedArrays), sep="");
-FilterHeader7 <- paste("LowessfParam = ", as.character(LowessfParam),
-                         sep="");          
-FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
+FilterHeader7 <- c(paste("MultCorrPerm = ", as.character(MultCorrPerm), sep=""),
+             paste("BootstrapSample = ", as.character(BootstrapSample), sep=""),
+             paste("TotalPermutations = ", as.character(TotalPermutations),
+                         sep=""));
+FilterHeader8 <- c(paste("LowessfParam = ", as.character(LowessfParam),
+                         sep=""),
+                   paste("HuberConf = ", as.character(HuberConf), sep=""),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
 
 FilterHeaderTable <-  c("Rank", "ID", "LogFoldChange", "RMSIntensity",
-                        "TotBiosamples", "TotArrays", "pValue", "PhenompValue",
+                        "TotBiosamples", "TotArrays", "tStatCyberT",
+                        "tStatNoCyberT","pValue", "PhenompValue",
                         "pValueNoCyberT","FreqpValue", "BHpValue", "BonpValue",
                         "SidakpValue", "HolmpValue", "HochpValue",
-                        "tStatCyberT", "tStatNoCyberT",
+                        "BHpValuePerm", "WYpValuePerm",
                         "AdjStndErr", "StndErr",
                         "AdjStndDev", "BGStndDev","StndDev");
 
