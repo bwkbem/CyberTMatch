@@ -153,7 +153,9 @@ library(MASS);
                  ############################################
 
 #Define Output Dirctory with Prefix
-OutputPrefix <- paste(OutputDirectory, OutputFile, sep="");
+OutputPrefix <- paste(OutputDirectory, OutputFile,"A", as.character(MinArrays),
+                     "P", as.character(MinProbes), sep="");
+
 
 #DEFINE GRAPHICS WINDOW SIZE
 WinWidth <- 8.5;           
@@ -495,13 +497,7 @@ RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; #For no CyberT
 DOFnoCyberT <- RankedTotBiosamples - 1;   #For no CyberT
 pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
 
-#Calculate pValue for tStat with BGStndDev/sqrt(BioSamples)
-BGStndErr <- BGStDev/sqrt(TotBiosamples);   #For no Lambda
-tStatBGCyberT <- abs(LogFoldChange/BGStndErr);  #For no Lambda
-RankedtStatBGCyberT <- tStatBGCyberT[tStatFilter]; #For no Lambda
 
-DOFnoLambda <- RankedTotBiosamples - 1;   #For no Lambda
-pValueBGCyberT <- 2 * (1 - pt(RankedtStatBGCyberT, DOFnoLambda));
 
 
 
@@ -557,12 +553,11 @@ CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter],
                        RMSIntensity=Intensity[tStatFilter], 
                        RankedTotBiosamples,
                        TotArrays=TotArrays[tStatFilter],
-                       pValue, PhenompValue, pValueBGCyberT, pValueNoCyberT, 
+                       pValue, PhenompValue, pValueNoCyberT, 
                        FreqpValue, BHpValue, BonpValue, SidakpValue,
                        HolmpValue, HochpValue,
-                       RankedtStat, tStatBGCyberT, tStatNoCyberT,  
+                       RankedtStat, tStatNoCyberT,  
                        AdjStndErr=AdjustedStndErr[tStatFilter],
-                       BGStndErr=BGStndErr[tStatFilter],
                        StndErr=StndErr[tStatFilter],
                        AdjStndDev=AdjustedStndDev[tStatFilter],
                        BGStDev=BGStDev[tStatFilter],
@@ -586,58 +581,57 @@ FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
 
 FilterHeaderTable <-  c("Rank", "ID", "LogFoldChange", "RMSIntensity",
                         "TotBiosamples", "TotArrays", "pValue", "PhenompValue",
-                        "pValueBGCyberT", "pValueNoCyberT","FreqpValue",
-                        "BHpValue", "BonpValue", "SidakpValue",
-                        "HolmpValue", "HochpValue",
-                        "tStatCyberT", "tStatBGCyberT", "tStatNoCyberT",
-                        "AdjStndErr", "BGStndErr", "StndErr",
-                        "AdjStndDev", "BGStndDev", "StndDev");
+                        "pValueNoCyberT","FreqpValue", "BHpValue", "BonpValue",
+                        "SidakpValue", "HolmpValue", "HochpValue",
+                        "tStatCyberT", "tStatNoCyberT",
+                        "AdjStndErr", "StndErr",
+                        "AdjStndDev", "BGStndDev","StndDev");
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\n");
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\n");
 cat(FilterHeader2, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader3, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader4, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader5, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader6, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader7, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader8, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".CyTBH", sep=""), sep="\n", append=TRUE);
+                     ".CyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeaderTable, file=paste(OutputPrefix, "L",
-                         as.character(Lambda), ".CyTBH", sep=""), sep="\t",
+                         as.character(Lambda), ".CyTDS", sep=""), sep="\t",
                          append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-             ".CyTBH", sep=""), sep="\n", append=TRUE);
+             ".CyTDS", sep=""), sep="\n", append=TRUE);
 
 write.table(CyberTBHTable, file=paste(OutputPrefix, "L",
-            as.character(Lambda), ".CyTBH", sep=""), quote=FALSE, sep="\t",
+            as.character(Lambda), ".CyTDS", sep=""), quote=FALSE, sep="\t",
             col.names=FALSE, row.names=FALSE, append=TRUE);
 
 
@@ -647,111 +641,116 @@ write.table(CyberTBHTable, file=paste(OutputPrefix, "L",
 ##  Genes ordered to genome for GenomeCrawling
 ##################
 RankedGeneNames <- HuberGenes[tStatFilter];
-RankedTotBiosamples <-  TotBiosamples[tStatFilter];
+#RankedtStat <- tStat[tStatFilter];
+#RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; 
+RankedLogFoldChange <- LogFoldChange[tStatFilter];
+RankedIntensity <- Intensity[tStatFilter];
+#RankedTotBiosamples <-  TotBiosamples[tStatFilter];
+RankedTotArrays <- TotArrays[tStatFilter];
+#pValue is already ranked  
+#pValueNoCyberT is already ranked  
 
 GenetStat <- rep(0, length(GenomeGenes));
+GenetStatNoCyberT <- rep(0, length(GenomeGenes));
+GeneLogFoldChange <- rep(0, length(GenomeGenes));
+GeneIntensity <- rep(0, length(GenomeGenes));
 GeneTotBiosamples <- rep(0, length(GenomeGenes));
-GeneBHpValue <- rep(1, length(GenomeGenes));
-GenepValue <- rep(1, length(GenomeGenes));
-GenepValueBon <- rep(1, length(GenomeGenes));
+GeneTotArrays <- rep(0, length(GenomeGenes));
+GenepValue <- rep(1, length(GenomeGenes))
+GenepValueNoCyberT <- rep(1, length(GenomeGenes));
+
 GenePos <- 1:length(GenomeGenes);
 GeneNames <- GenomeGenes;
 
 
-DegreesOfFreedom <- Lambda - 2;
-#DegreesOfFreedom <- GeneTotBiosamples - 1;
-
-pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
-pValue[which(pValue > 1)] <- 1;
-
-pValueBon <- length(tStatFilter)*(2 * (1 - pt(RankedtStat, DegreesOfFreedom)));
-pValueBon[which(pValueBon > 1)] <- 1;
-
-#DegreesOfFreedom <- RankedTotBiosamples - 1;
-#pValueN <- length(tStatFilter)*(2 * (1 - pt(RankedtStat, DegreesOfFreedom)));
-#pValueN[which(pValueN > 1)] <- 1;
-
 #### Output
 
 for (i in 1:length(RankedGeneNames)) {
-  GeneFilter <- as.logical(match(GeneNames, RankedGeneNames[i], nomatch=0));
 
-  GeneBHpValue[GeneFilter] <- BHpValue[i];
-  GenepValue[GeneFilter] <- pValue[i];
-  GenepValueBon[GeneFilter] <- pValueBon[i];
-  GenetStat[GeneFilter] <- RankedtStat[i];
+    GeneFilter <- as.logical(match(GeneNames, RankedGeneNames[i], nomatch=0));
+
+    GenetStat[GeneFilter] <- RankedtStat[i];
+    GenetStatNoCyberT[GeneFilter] <- RankedtStatNoCyberT[i] 
+    GeneLogFoldChange[GeneFilter] <- RankedLogFoldChange[i];
+    GeneIntensity[GeneFilter] <- RankedIntensity[i];
+    GeneTotBiosamples[GeneFilter] <- RankedTotBiosamples[i];
+    GeneTotArrays[GeneFilter] <- RankedTotArrays[i];
+    GenepValue[GeneFilter] <- pValue[i];
+    GenepValueNoCyberT[GeneFilter] <- pValueNoCyberT[i];
+
 }
 
-
-
-SingleGeneTable <- cbind(GeneNames, GenetStat, GenepValue, GeneBHpValue,
-                         GenepValueBon, GenePos);
+FilterHeaderTable <-  c("ID", "GenomePos", "tStat", "tStatNoCyberT", "pValue",
+                        "pValueNoCyberT", "LogFoldChng", "Intenisty",
+                        "BioSamples", "TotArrays");
 
 FilterHeader1 <- paste("Input Directory = ", InputDirectory, sep="");
 FilterHeader2 <- c("NormFiles = ", paste(as.character(ProbesetFiles),
                                              sep=""));
 FilterHeader3 <- date();
 FilterHeader4 <- paste("Lambda = ", as.character(Lambda), sep="");
-FilterHeader5 <- paste("MinArrays = ", as.character(MinArrays), sep="");
-FilterHeader6 <- paste("MinProbes = ", as.character(MinProbes), sep="");   
+FilterHeader5 <- c(paste("MinArrays = ", as.character(MinArrays), sep=""),
+                   paste("MinProbes = ", as.character(MinProbes), sep=""));
+FilterHeader6 <- paste("MatchedArrays = ", as.character(MatchedArrays), sep="");
 FilterHeader7 <- paste("LowessfParam = ", as.character(LowessfParam),
                          sep="");          
 
 FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
 
-FilterHeaderTable <-  c("ID", "tStat", "pValue","BHpValue", "pValue Bon",  "Gene Pos");
+SingleGeneTable <- cbind(GeneNames, GenePos, GenetStat, GenetStatNoCyberT,
+                         GenepValue, GenepValueNoCyberT, GeneLogFoldChange,
+                         GeneIntensity, GeneTotBiosamples, GeneTotArrays);
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\n");
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\n");
 cat(FilterHeader2, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader3, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader4, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader5, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader6, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader7, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 cat(FilterHeader8, file=paste(OutputPrefix, "L",
-                     as.character(Lambda), ".GeCyTBH", sep=""), sep="\t",
+                     as.character(Lambda), ".GeCyTDS", sep=""), sep="\t",
                      append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-                     ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+                     ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 
 cat(FilterHeaderTable, file=paste(OutputPrefix, "L",
-                         as.character(Lambda), ".GeCyTBH", sep=""),
+                         as.character(Lambda), ".GeCyTDS", sep=""),
                          sep="\t", append=TRUE);
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
-             ".GeCyTBH", sep=""), sep="\n", append=TRUE);
+             ".GeCyTDS", sep=""), sep="\n", append=TRUE);
 
 write.table(SingleGeneTable, file=paste(OutputPrefix, "L",
-            as.character(Lambda), ".GeCyTBH", sep=""), quote=FALSE,
+            as.character(Lambda), ".GeCyTDS", sep=""), quote=FALSE,
             sep="\t", col.names=FALSE, row.names=FALSE, append=TRUE);
 
 rm(SingleGeneTable);
 
 #rm(list=ls());
-
 

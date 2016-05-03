@@ -1,11 +1,11 @@
 
 
-Lambda <- 12;
+Lambda <- 5;
 
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- TRUE;
+MatchedArrays <- FALSE;
 
 #PARAMETERS FOR LOWESS
 LowessfParam <- 0.4;
@@ -36,4 +36,6 @@ GenomeHeaderLength <- 0;   #DO NOT EDIT
 
 
 OutputDirectory <- "/home/anon/Projects/Data/SPyM1/Development/";
-OutputFile <- "G8bA8P2tStat";
+OutputFile <- "G8b";
+
+
