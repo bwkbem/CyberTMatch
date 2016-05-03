@@ -523,7 +523,7 @@ for (i in Rank) {
 
 PKu <- 1-(2 * (1 - pt(sum(RankedtStat), DegreesOfFreedom)));
 Pg <- 1 - pValue;
-PhenompValue <- PKu - Pg;
+DeleuzepValue <- PKu - Pg;
 
 BonpValue <- xNumOfHyp * pValue;
 BonpValue[which(BonpValue > 1)] <- 1;
@@ -633,7 +633,7 @@ CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter],
                        RankedTotBiosamples,
                        TotArrays=TotArrays[tStatFilter],
                        RankedtStat, RankedtStatNoCyberT,  
-                       pValue, PhenompValue, pValueNoCyberT, 
+                       pValue, DeleuzepValue, pValueNoCyberT, 
                        FreqpValue, BHpValue, BonpValue, SidakpValue,
                        HolmpValue, HochpValue, BHpValuePerm, WYpValue,
                        AdjStndErr=AdjustedStndErr[tStatFilter],
@@ -665,7 +665,7 @@ FilterHeader8 <- c(paste("LowessfParam = ", as.character(LowessfParam),
 
 FilterHeaderTable <-  c("Rank", "ID", "LogFoldChange", "RMSIntensity",
                         "TotBiosamples", "TotArrays", "tStatCyberT",
-                        "tStatNoCyberT","pValue", "PhenompValue",
+                        "tStatNoCyberT","pValue", "DeleuzepValue",
                         "pValueNoCyberT","FreqpValue", "BHpValue", "BonpValue",
                         "SidakpValue", "HolmpValue", "HochpValue",
                         "BHpValuePerm", "WYpValuePerm",

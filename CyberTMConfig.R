@@ -8,7 +8,7 @@ MinArrays <- 4;
 MatchedArrays <- FALSE; # See Input section of this file more detail
 
 #########  Permutation resampling Methods ONLY ##############
-MultCorrPerm <- TRUE;  #Long Run Times!!!!  Performs WY and BH with resampling
+MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
 BootstrapSample <- TRUE;
 CyberTOFF <- FALSE;  #For permutation methods only
 TotalPermutations <- 2000;
