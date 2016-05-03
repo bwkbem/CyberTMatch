@@ -1,16 +1,20 @@
 
 
-Lambda <- 5;
+Lambda <- 6;
 
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- TRUE;
+MatchedArrays <- FALSE; # See Input section of this file more detail
 
-MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
+#########  Permutation resampling Methods ONLY ##############
+MultCorrPerm <- TRUE;  #Long Run Times!!!!  Performs WY and BH with resampling
 BootstrapSample <- TRUE;
-TotalPermutations <- 1000;
+CyberTOFF <- FALSE;  #For permutation methods only
+TotalPermutations <- 2000;
 
+
+######### Statistical Parameters ####################
 #PARAMETERS FOR LOWESS
 LowessfParam <- 0.4;
 
@@ -25,6 +29,8 @@ PlotResults <- TRUE;
 
 InputDirectory <- "/home/anon/Projects/Data/SPyM1/Lowess/";
 
+# Probsets are matched to biosamples in order of c(1, 1, 2, 2, 3, 3, 4, 4).
+# Matching algorithm is based on this if not this pattern set MatchedArrays <- FALSE
 ProbesetFiles <- c("S730.LowPset", "F730.LowPset",
                    "S806.LowPset", "F806.LowPset",
                    "S812.LowPset", "F812.LowPset",

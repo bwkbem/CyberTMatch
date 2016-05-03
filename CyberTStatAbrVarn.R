@@ -548,8 +548,15 @@ for (i in Rank) {
 #statistic
 
 if (MultCorrPerm) {
-    BStat <- rep(0, length(tStat));
-    WYBStat <- rep(0, length(tStat));
+
+    if (CyberTOFF) {
+        SampletStat <- tStatNoCyberT;
+    } else {
+        SampletStat <- tStat;
+    }
+    
+    BStat <- rep(0, length(SampletStat));
+    WYBStat <- rep(0, length(SampletStat));
     B <- TotalPermutations;
 
     IDVecFilter <- as.logical(match(IDVec, HuberGenes, nomatch=0));
@@ -563,9 +570,9 @@ if (MultCorrPerm) {
     for (b in 1:B) {
 
         if (BootstrapSample) {
-            PertStat <- sample(tStat, replace=TRUE);
+            PertStat <- sample(SampletStat, replace=TRUE);
         } else {
-            PertStat <- sample(tStat);
+            PertStat <- sample(SampletStat);
         }
         
         for (k in 1:xNumOfHyp) {
@@ -647,6 +654,7 @@ FilterHeader5 <- c(paste("MinArrays = ", as.character(MinArrays), sep=""),
                    paste("MinProbes = ", as.character(MinProbes), sep=""));
 FilterHeader6 <- paste("MatchedArrays = ", as.character(MatchedArrays), sep="");
 FilterHeader7 <- c(paste("MultCorrPerm = ", as.character(MultCorrPerm), sep=""),
+             paste("CyberTOFF = ", as.character(CyberTOFF), sep=""),
              paste("BootstrapSample = ", as.character(BootstrapSample), sep=""),
              paste("TotalPermutations = ", as.character(TotalPermutations),
                          sep=""));
