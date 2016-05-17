@@ -5,12 +5,12 @@ Lambda <- 6;
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- FALSE; # See Input section of this file more detail
+MatchedArrays <- TRUE; # See Input section of this file more detail
 
 #########  Permutation resampling Methods ONLY ##############
 MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
-BootstrapSample <- TRUE;
-CyberTOFF <- FALSE;  #For permutation methods only
+BootstrapSample <- FALSE;
+CyberTOFF <- TRUE;  #For permutation methods only
 TotalPermutations <- 2000;
 
 
@@ -45,7 +45,7 @@ GenomeHeaderLength <- 0;   #DO NOT EDIT
 
 
 
-OutputDirectory <- "/home/anon/Projects/Data/SPyM1/Development/";
+OutputDirectory <- "/home/anon/Projects/Data/SPyM1/Development/CyberT/Matched/null/";
 OutputFile <- "G8b";
 
 

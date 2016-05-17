@@ -328,11 +328,11 @@ TotArrays <- as.numeric(as.vector(zRMSHuberReport[zTotHuberSetFilter, 4]));
 
 if (MatchedArrays) {
 
-    TotBiosamples <- TotArrays/2;
+    TotBioSamples <- TotArrays/2;
 
 } else {
 
-    TotBiosamples <- 0;
+    TotBioSamples <- 0;
     for (i in 1:length(HuberGenes)) {
         
         BiosampleFilter <- as.logical(match(IDVec, HuberGenes[i], nomatch=0));
@@ -364,13 +364,13 @@ if (MatchedArrays) {
 
         }
 
-        TotBiosamples <- c(TotBiosamples, count);
+        TotBioSamples <- c(TotBioSamples, count);
     }
-    TotBiosamples <- TotBiosamples[2:length(TotBiosamples)];
+    TotBioSamples <- TotBioSamples[2:length(TotBioSamples)];
 }
 
 
-StndErr <- LogFoldStndDev/sqrt(TotBiosamples);
+StndErr <- LogFoldStndDev/sqrt(TotBioSamples);
 
 ### Remove non Gene Probes and unrepresented genes in annotation
 GenomeFilter <- as.logical(as.vector(
@@ -386,7 +386,7 @@ LogFoldStndDev <- LogFoldStndDev[GenomeFilter];
 
 TotArrays <- TotArrays[GenomeFilter];
 
-TotBiosamples <- TotBiosamples[GenomeFilter];
+TotBioSamples <- TotBioSamples[GenomeFilter];
 
 StndErr <- StndErr[GenomeFilter];
 
@@ -399,220 +399,362 @@ rm(list=ls(pat="^g"));
                  ####    CALCULATE ADJ STANDRD DEVIATION   #### 
                  ##############################################
 
-# LOWESS fit data and organize for extraction of LOWESS values
-xBGSigmaLowess <- lowess(Intensity, LogFoldStndDev, f=LowessfParam);
+if (!CyberTOFF) {
+    # LOWESS fit data and organize for extraction of LOWESS values
+    xBGSigmaLowess <- lowess(Intensity, LogFoldStndDev, f=LowessfParam);
 
-BGStDev <- 0;
-xLowessFilter <- order(Intensity);
-for (j in 1:length(xLowessFilter)) {
-  tempBGStDev <- xBGSigmaLowess$y[as.logical(
-                                      match(xLowessFilter, j, nomatch=0))]
-  BGStDev <- c(BGStDev, tempBGStDev);
-}
-                                
-BGStDev <- BGStDev[2:(length(BGStDev))]
-
-
-#Calculate Adjusted Stndard Err
-#nu is defined to result in a constant lambda for all genes
-nu <- 0;
-xAdjustedVar <- 0;
-for (k in 1:length(HuberGenes)) {
-  if (TotBiosamples[k] >= Lambda) {
-    tempnu <- 0;
-    } else {
-      tempnu <- Lambda - TotBiosamples[k];
+    BGStDev <- 0;
+    xLowessFilter <- order(Intensity);
+    for (j in 1:length(xLowessFilter)) {
+        tempBGStDev <- xBGSigmaLowess$y[as.logical(
+            match(xLowessFilter, j, nomatch=0))]
+        BGStDev <- c(BGStDev, tempBGStDev);
     }
-  xSigmaSquared <- (tempnu * BGStDev[k]^2 +
-       (TotBiosamples[k]-1) * LogFoldStndDev[k]^2)/
-           (tempnu + TotBiosamples[k]-2);
-    
-  xAdjustedVar <- c(xAdjustedVar, xSigmaSquared);
-  nu <- c(nu, tempnu);
-}
-      
-xAdjustedVar <- xAdjustedVar[2:(length(xAdjustedVar))];
-nu <- nu[2:length(nu)];
-      
-AdjustedStndDev <- sqrt(xAdjustedVar);
-AdjustedStndErr <- sqrt(xAdjustedVar/Lambda);
+                                
+    BGStDev <- BGStDev[2:(length(BGStDev))]
 
-rm(list=ls(pat="^temp"));
+
+    #Calculate Adjusted Stndard Err
+    #nu is defined to result in a constant lambda for all genes
+    nu <- 0;
+    xAdjustedVar <- 0;
+    for (k in 1:length(HuberGenes)) {
+        if (TotBioSamples[k] >= Lambda) {
+            tempnu <- 0;
+        } else {
+            tempnu <- Lambda - TotBioSamples[k];
+        }
+        xSigmaSquared <- (tempnu * BGStDev[k]^2 +
+                              (TotBioSamples[k]-1) * LogFoldStndDev[k]^2)/
+                              (tempnu + TotBioSamples[k]-2);
+    
+        xAdjustedVar <- c(xAdjustedVar, xSigmaSquared);
+        nu <- c(nu, tempnu);
+    }
+      
+    xAdjustedVar <- xAdjustedVar[2:(length(xAdjustedVar))];
+    nu <- nu[2:length(nu)];
+      
+    AdjustedStndDev <- sqrt(xAdjustedVar);
+    AdjustedStndErr <- sqrt(xAdjustedVar/Lambda);
+
+    rm(list=ls(pat="^temp"));
       
               #### Plot Fits Before and After Adjustment  ####
-if (PlotResults) {
+    if (PlotResults) {
   
-  #Plot to file
-  postscript(file=paste(OutputPrefix, "CyberT", "L",
-             as.character(Lambda), ".eps", sep=""),  horizontal=FALSE,
-             onefile=TRUE);
+        #Plot to file
+        postscript(file=paste(OutputPrefix, "CyberT", "L",
+                   as.character(Lambda), ".eps", sep=""),  horizontal=FALSE,
+                   onefile=TRUE);
 
-  chh <-par()$cxy[2];
-  chw <-par()$cxy[2];
-  par(mar=c(4,5,3,2), omi=c(0.5,0.5,0.5,0.5));
+        chh <-par()$cxy[2];
+        chw <-par()$cxy[2];
+        par(mar=c(4,5,3,2), omi=c(0.5,0.5,0.5,0.5));
 
-  par(mfrow=c(2,1));
+        par(mfrow=c(2,1));
 
-  y0 <- as.numeric(as.vector(LogFoldStndDev));
-  ymax <- max(y0);
-  x0 <- as.numeric(as.vector(Intensity));
+        y0 <- as.numeric(as.vector(LogFoldStndDev));
+        ymax <- max(y0);
+        x0 <- as.numeric(as.vector(Intensity));
  
-  plot(y0 ~ x0, type="p",  main="StndDev", 
-     xlab="A", ylab = "StndDev \nLogFoldProbeSets",
-     cex= 1.0, xlim=c(0, 15),
-     ylim=c(0, ymax),
-     pch=16);
-  lines(xBGSigmaLowess$x, xBGSigmaLowess$y, col=2);
+        plot(y0 ~ x0, type="p",  main="StndDev", 
+             xlab="A", ylab = "StndDev \nLogFoldProbeSets",
+             cex= 1.0, xlim=c(0, 15),
+             ylim=c(0, ymax),
+             pch=16);
+        lines(xBGSigmaLowess$x, xBGSigmaLowess$y, col=2);
 
-  y0 <- AdjustedStndDev;
-  x0 <- as.numeric(as.vector(Intensity));
+        y0 <- AdjustedStndDev;
+        x0 <- as.numeric(as.vector(Intensity));
 
-  #Best fit after adjustment
-  xCorrectedLowess <- lowess(Intensity, AdjustedStndDev, f=LowessfParam);
+        #Best fit after adjustment
+        xCorrectedLowess <- lowess(Intensity, AdjustedStndDev, f=LowessfParam);
   
-  plot(y0 ~ x0, type="p",  main="Adj Stnd Dev", 
-     xlab="A", ylab = "AdjStndDev \nLogFoldProbeSets",
-     cex= 1.0, xlim=c(0, 15),
-     ylim=c(0, ymax),
-     pch=16);
-  lines(xBGSigmaLowess$x, xBGSigmaLowess$y, col=2);
-  lines(xCorrectedLowess$x, xCorrectedLowess$y, col=3);
- 
-  dev.off()
+        plot(y0 ~ x0, type="p",  main="Adj Stnd Dev", 
+             xlab="A", ylab = "AdjStndDev \nLogFoldProbeSets",
+             cex= 1.0, xlim=c(0, 15),
+             ylim=c(0, ymax),
+             pch=16);
+        lines(xBGSigmaLowess$x, xBGSigmaLowess$y, col=2);
+        lines(xCorrectedLowess$x, xCorrectedLowess$y, col=3);
+    
+        dev.off()
+    }
+    rm(list=ls(pat="^x"));
+    rm(list=ls(pat="^y"));
+
 }
-rm(list=ls(pat="^x"));
-rm(list=ls(pat="^y"));
-
-
            ###################################################
            ####    PERFORM t-test AND CALCULATE pVALUES   #### 
            ###################################################
 
+if (!CyberTOFF) {
+    #Calculate t-Test statistic using a pairwise t-Test with log fold data
+    tStat <- abs(LogFoldChange/AdjustedStndErr);
 
-#Calculate t-Test statistic using a pairwise t-Test with log fold data
-tStat <- abs(LogFoldChange/AdjustedStndErr);
+    #Calculate pValue for tStat with AdjStndError
+    tStatFilter <- order(tStat, decreasing=TRUE);
+    RankedtStat <- tStat[tStatFilter];
+    RankedTotBioSamples <- TotBioSamples[tStatFilter];
 
-#Calculate pValue for tStat with AdjStndError
-tStatFilter <- order(tStat, decreasing=TRUE);
-RankedtStat <- tStat[tStatFilter];
-RankedTotBiosamples <- TotBiosamples[tStatFilter];
+    DegreesOfFreedom <- Lambda - 2;
+    pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
 
-DegreesOfFreedom <- Lambda - 2;
-pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
+    #Calculate pValue for tStat with StndError
+    tStatNoCyberT <- abs(LogFoldChange/StndErr);  #For no CyberT
+    RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; #For no CyberT
 
-#Calculate pValue for tStat with StndError
-tStatNoCyberT <- abs(LogFoldChange/StndErr);  #For no CyberT
-RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; #For no CyberT
-
-DOFnoCyberT <- RankedTotBiosamples - 1;   #For no CyberT
-pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
+    DOFnoCyberT <- RankedTotBioSamples - 1;   #For no CyberT
+    pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
 
 
 #################Calculate Multiplicity p-values for CyberT###############
 
-xNumOfHyp <- length(RankedtStat);
-Rank <- 1:xNumOfHyp;
+    xNumOfHyp <- length(RankedtStat);
+    Rank <- 1:xNumOfHyp;
 
-FreqpValue <- Rank/xNumOfHyp;
+    FreqpValue <- Rank/xNumOfHyp;
 
-BHpValue <- pValue * xNumOfHyp / Rank;
-BHpValue[which(BHpValue > 1)] <- 1;
-for (i in Rank) {
-  BHpValue[i] <- min(BHpValue[i:xNumOfHyp]);   
-}
+    BHpValue <- pValue * xNumOfHyp / Rank;
+    BHpValue[which(BHpValue > 1)] <- 1;
+    for (i in Rank) {
+        BHpValue[i] <- min(BHpValue[i:xNumOfHyp]);   
+    }
 
-PKu <- 1-(2 * (1 - pt(sum(RankedtStat), DegreesOfFreedom)));
-Pg <- 1 - pValue;
-DeleuzepValue <- PKu - Pg;
+    PKu <- 1-(2 * (1 - pt(sum(RankedtStat), DegreesOfFreedom)));
+    Pg <- 1 - pValue;
+    DeleuzepValue <- PKu - Pg;
 
-BonpValue <- xNumOfHyp * pValue;
-BonpValue[which(BonpValue > 1)] <- 1;
+    BonpValue <- xNumOfHyp * pValue;
+    BonpValue[which(BonpValue > 1)] <- 1;
 
-SidakpValue <- 1 - Pg^xNumOfHyp;
+    SidakpValue <- 1 - Pg^xNumOfHyp;
 
-HolmpValue <- (xNumOfHyp - Rank + 1) * pValue;
-HolmpValue[which(HolmpValue > 1)] <- 1;
-for (i in xNumOfHyp:1) {
-  HolmpValue[i] <- max(HolmpValue[1:i]);   
-}
+    HolmpValue <- (xNumOfHyp - Rank + 1) * pValue;
+    HolmpValue[which(HolmpValue > 1)] <- 1;
+    for (i in xNumOfHyp:1) {
+        HolmpValue[i] <- max(HolmpValue[1:i]);   
+    }
 
-HochpValue <- (xNumOfHyp - Rank + 1) * pValue;
-HochpValue[which(HochpValue > 1)] <- 1;
-for (i in Rank) {
-  HochpValue[i] <- min(HochpValue[i:xNumOfHyp]);   
-}
+    HochpValue <- (xNumOfHyp - Rank + 1) * pValue;
+    HochpValue[which(HochpValue > 1)] <- 1;
+    for (i in Rank) {
+        HochpValue[i] <- min(HochpValue[i:xNumOfHyp]);   
+    }
 
 ######################### Permutation Methods ############################
               #####    Perform Permutation Resampling  ####
 #All data will be referenced based on relative rank determined by t-test
 #statistic
 
-if (MultCorrPerm) {
-
-    if (CyberTOFF) {
-        SampletStat <- tStatNoCyberT;
-    } else {
-        SampletStat <- tStat;
-    }
-    
-    BStat <- rep(0, length(SampletStat));
-    WYBStat <- rep(0, length(SampletStat));
-    B <- TotalPermutations;
-
-    IDVecFilter <- as.logical(match(IDVec, HuberGenes, nomatch=0));
-    PerIDVec <- IDVec[IDVecFilter];
-    PerIDVecf <- factor(PerIDVec);
-
-    PerLogFoldVector <- LogFoldVec[IDVecFilter];
-    PerArrayID <- ArrayID[IDVecFilter];
-
-    xNumOfHyp <- length(RankedtStat);
-    for (b in 1:B) {
-
-        if (BootstrapSample) {
-            PertStat <- sample(SampletStat, replace=TRUE);
-        } else {
-            PertStat <- sample(SampletStat);
-        }
+    if (MultCorrPerm) {
         
-        for (k in 1:xNumOfHyp) {
-            bStatk <- rep(0, xNumOfHyp);
-            tStatk <- rep(RankedtStat[k], xNumOfHyp);
-            bStatk[which(PertStat[1:xNumOfHyp] >= tStatk)] <- 1;
-            BStatk <- sum(bStatk);
-            BStat[k] <- BStat[k] + BStatk;
+        SampletStat <- tStat;
+  
+        BStat <- rep(0, length(SampletStat));
+        WYBStat <- rep(0, length(SampletStat));
+        B <- TotalPermutations;
+
+        IDVecFilter <- as.logical(match(IDVec, HuberGenes, nomatch=0));
+        PerIDVec <- IDVec[IDVecFilter];
+        PerIDVecf <- factor(PerIDVec);
+
+        PerLogFoldVector <- LogFoldVec[IDVecFilter];
+        PerArrayID <- ArrayID[IDVecFilter];
+
+        xNumOfHyp <- length(RankedtStat);
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat <- sample(SampletStat, replace=TRUE);
+            } else {
+                PertStat <- sample(SampletStat);
+            }
+        
+            for (k in 1:xNumOfHyp) {
+                bStatk <- rep(0, xNumOfHyp);
+                tStatk <- rep(RankedtStat[k], xNumOfHyp);
+                bStatk[which(PertStat[1:xNumOfHyp] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat[k] <- BStat[k] + BStatk;
             
+            }
+
+            UStat <- rep(0, xNumOfHyp);
+            UStat[xNumOfHyp] <- PertStat[xNumOfHyp];
+            WYBStat[xNumOfHyp] <- WYBStat[xNumOfHyp] + 1;
+            for (k in (xNumOfHyp-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat[k]);
+                if (UStat[k] >= RankedtStat[k]) {
+                    WYBStat[k] <- WYBStat[k] + 1
+                }
+            }   
         }
 
-        UStat <- rep(0, xNumOfHyp);
-        UStat[xNumOfHyp] <- PertStat[xNumOfHyp];
-        WYBStat[xNumOfHyp] <- WYBStat[xNumOfHyp] + 1;
-        for (k in (xNumOfHyp-1):1) {
-            UStat[k] <- max(UStat[k+1], PertStat[k]);
-            if (UStat[k] >= RankedtStat[k]) {
-                WYBStat[k] <- WYBStat[k] + 1
-            }
+        WYpValue <- WYBStat / B;
+
+        Rank <- 1:xNumOfHyp;
+        EstpValue <-  BStat/(xNumOfHyp * B);
+    
+        BHpValuePerm <- EstpValue * xNumOfHyp / Rank;
+        BHpValuePerm[which(BHpValuePerm > 1)] <- 1;
+        for (i in Rank) {
+            BHpValuePerm[i] <- min(BHpValuePerm[i:xNumOfHyp]);   
         }   
+    } else {
+        xNumOfHyp <- length(RankedtStat);
+        BHpValuePerm <- rep("NA", xNumOfHyp);
+        WYpValue <- rep("NA", xNumOfHyp);
+        TotalPermutations <- "NA";
+        BootstrapSample <- "NA";
     }
 
-    WYpValue <- WYBStat / B;
-
-    Rank <- 1:xNumOfHyp;
-    EstpValue <-  BStat/(xNumOfHyp * B);
+    HuberGenes <- HuberGenes[tStatFilter];
+    LogFoldChange <- LogFoldChange[tStatFilter];
+    RMSIntensity <- Intensity[tStatFilter]; 
+    TotArrays <- TotArrays[tStatFilter];
+    AdjStndErr <- AdjustedStndErr[tStatFilter];
+    StndErr <- StndErr[tStatFilter];
+    AdjStndDev <- AdjustedStndDev[tStatFilter];
+    BGStDev <- BGStDev[tStatFilter];
+    StDev <- LogFoldStndDev[tStatFilter];
+    TotBioSamples <- RankedTotBioSamples;
+    tStat <- RankedtStat;
+    tStatNoCyberT <- RankedtStatNoCyberT;
     
-    BHpValuePerm <- EstpValue * xNumOfHyp / Rank;
-    BHpValuePerm[which(BHpValuePerm > 1)] <- 1;
-    for (i in Rank) {
-        BHpValuePerm[i] <- min(BHpValuePerm[i:xNumOfHyp]);   
-    }   
-} else {
-    xNumOfHyp <- length(RankedtStat);
-    BHpValuePerm <- rep("NA", xNumOfHyp);
-    WYpValue <- rep("NA", xNumOfHyp);
-    TotalPermutations <- "NA";
-    BootstrapSample <- "NA";
-}
+} else {      # For CyberTOFF as TRUE
+    
+    #Calculate t-Test statistic using a pairwise t-Test with log fold data
+    Lambda <- "null"
+    tStat <- rep(NA, length(HuberGenes)); 
+    pValue <- rep(NA, length(HuberGenes));
+    AdjStndErr <- rep(NA, length(HuberGenes));
+    AdjStndDev <- rep(NA, length(HuberGenes)); 
+    BGStDev <- rep(NA, length(HuberGenes)); 
 
+    #Calculate pValue for tStat with StndError
+    tStatNoCyberT <- abs(LogFoldChange/StndErr);  #For no CyberT
+    tStatFilterNoCyberT <- order(tStatNoCyberT, decreasing=TRUE);
+    RankedtStatNoCyberT <- tStatNoCyberT[tStatFilterNoCyberT]; 
+    RankedTotBioSamples <- TotBioSamples[tStatFilterNoCyberT];
+
+    DOFnoCyberT <- RankedTotBioSamples - 1;   #For no CyberT
+    pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
+
+
+
+#################Calculate Multiplicity p-values for CyberT###############
+
+    xNumOfHyp <- length(RankedtStatNoCyberT);
+    Rank <- 1:xNumOfHyp;
+
+    FreqpValue <- Rank/xNumOfHyp;
+
+    BHpValue <- pValueNoCyberT * xNumOfHyp / Rank;
+    BHpValue[which(BHpValue > 1)] <- 1;
+    for (i in Rank) {
+        BHpValue[i] <- min(BHpValue[i:xNumOfHyp]);   
+    }
+
+    #PKu <- 1-(2 * (1 - pt(sum(RankedtStatNoCyberT), DegreesOfFreedom)));
+    Pg <- 1 - pValueNoCyberT;
+    DeleuzepValue <- rep(NA, length(HuberGenes));
+
+    BonpValue <- xNumOfHyp * pValueNoCyberT;
+    BonpValue[which(BonpValue > 1)] <- 1;
+
+    SidakpValue <- 1 - Pg^xNumOfHyp;
+
+    HolmpValue <- (xNumOfHyp - Rank + 1) * pValueNoCyberT;
+    HolmpValue[which(HolmpValue > 1)] <- 1;
+    for (i in xNumOfHyp:1) {
+        HolmpValue[i] <- max(HolmpValue[1:i]);   
+    }
+
+    HochpValue <- (xNumOfHyp - Rank + 1) * pValueNoCyberT;
+    HochpValue[which(HochpValue > 1)] <- 1;
+    for (i in Rank) {
+        HochpValue[i] <- min(HochpValue[i:xNumOfHyp]);   
+    }
+
+######################### Permutation Methods ############################
+              #####    Perform Permutation Resampling  ####
+#All data will be referenced based on relative rank determined by t-test
+#statistic
+
+    if (MultCorrPerm) {
+        
+        SampletStat <- tStatNoCyberT;
+     
+        BStat <- rep(0, length(SampletStat));
+        WYBStat <- rep(0, length(SampletStat));
+        B <- TotalPermutations;
+
+        IDVecFilter <- as.logical(match(IDVec, HuberGenes, nomatch=0));
+        PerIDVec <- IDVec[IDVecFilter];
+        PerIDVecf <- factor(PerIDVec);
+
+        PerLogFoldVector <- LogFoldVec[IDVecFilter];
+        PerArrayID <- ArrayID[IDVecFilter];
+
+        xNumOfHyp <- length(RankedtStatNoCyberT);
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat <- sample(SampletStat, replace=TRUE);
+            } else {
+                PertStat <- sample(SampletStat);
+            }
+        
+            for (k in 1:xNumOfHyp) {
+                bStatk <- rep(0, xNumOfHyp);
+                tStatk <- rep(RankedtStatNoCyberT[k], xNumOfHyp);
+                bStatk[which(PertStat[1:xNumOfHyp] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat[k] <- BStat[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp);
+            UStat[xNumOfHyp] <- PertStat[xNumOfHyp];
+            WYBStat[xNumOfHyp] <- WYBStat[xNumOfHyp] + 1;
+            for (k in (xNumOfHyp-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat[k]);
+                if (UStat[k] >= RankedtStatNoCyberT[k]) {
+                    WYBStat[k] <- WYBStat[k] + 1
+                }
+            }   
+        }
+
+        WYpValue <- WYBStat / B;
+
+        Rank <- 1:xNumOfHyp;
+        EstpValue <-  BStat/(xNumOfHyp * B);
+    
+        BHpValuePerm <- EstpValue * xNumOfHyp / Rank;
+        BHpValuePerm[which(BHpValuePerm > 1)] <- 1;
+        for (i in Rank) {
+            BHpValuePerm[i] <- min(BHpValuePerm[i:xNumOfHyp]);   
+        }   
+    } else {
+        xNumOfHyp <- length(RankedtStatNoCyberT);
+        BHpValuePerm <- rep("NA", xNumOfHyp);
+        WYpValue <- rep("NA", xNumOfHyp);
+        TotalPermutations <- "NA";
+        BootstrapSample <- "NA";
+    }
+
+    HuberGenes <- HuberGenes[tStatFilterNoCyberT];
+    LogFoldChange <- LogFoldChange[tStatFilterNoCyberT];
+    RMSIntensity <- Intensity[tStatFilterNoCyberT]; 
+    TotArrays <- TotArrays[tStatFilterNoCyberT];
+    StndErr <- StndErr[tStatFilterNoCyberT];
+    StDev <- LogFoldStndDev[tStatFilterNoCyberT];
+    TotBioSamples <- RankedTotBioSamples;
+    tStatNoCyberT <- RankedtStatNoCyberT;
+
+}
 
 rm(ArrayList)
 rm(list=ls(pat="^x"));
@@ -627,20 +769,12 @@ rm(list=ls(pat="^Next"));
 
 
 #Combine vectors into a table for output
-CyberTBHTable <- cbind(Rank, ID=HuberGenes[tStatFilter],
-                       LogFoldChange=LogFoldChange[tStatFilter],
-                       RMSIntensity=Intensity[tStatFilter], 
-                       RankedTotBiosamples,
-                       TotArrays=TotArrays[tStatFilter],
-                       RankedtStat, RankedtStatNoCyberT,  
+CyberTTable <- cbind(Rank, HuberGenes, LogFoldChange, RMSIntensity, 
+                       TotBioSamples, TotArrays, tStat, tStatNoCyberT,  
                        pValue, DeleuzepValue, pValueNoCyberT, 
                        FreqpValue, BHpValue, BonpValue, SidakpValue,
                        HolmpValue, HochpValue, BHpValuePerm, WYpValue,
-                       AdjStndErr=AdjustedStndErr[tStatFilter],
-                       StndErr=StndErr[tStatFilter],
-                       AdjStndDev=AdjustedStndDev[tStatFilter],
-                       BGStDev=BGStDev[tStatFilter],
-                       StDev=LogFoldStndDev[tStatFilter]);
+                       AdjStndErr, StndErr, AdjStndDev, BGStDev, StDev);
 
 
 
@@ -664,7 +798,7 @@ FilterHeader8 <- c(paste("LowessfParam = ", as.character(LowessfParam),
                    paste("HuberTol = ", as.character(HuberTol), sep=""));
 
 FilterHeaderTable <-  c("Rank", "ID", "LogFoldChange", "RMSIntensity",
-                        "TotBiosamples", "TotArrays", "tStatCyberT",
+                        "TotBioSamples", "TotArrays", "tStatCyberT",
                         "tStatNoCyberT","pValue", "DeleuzepValue",
                         "pValueNoCyberT","FreqpValue", "BHpValue", "BonpValue",
                         "SidakpValue", "HolmpValue", "HochpValue",
@@ -715,7 +849,7 @@ cat(FilterHeaderTable, file=paste(OutputPrefix, "L",
 cat(c(""), file=paste(OutputPrefix, "L", as.character(Lambda),
              ".CyTDS", sep=""), sep="\n", append=TRUE);
 
-write.table(CyberTBHTable, file=paste(OutputPrefix, "L",
+write.table(CyberTTable, file=paste(OutputPrefix, "L",
             as.character(Lambda), ".CyTDS", sep=""), quote=FALSE, sep="\t",
             col.names=FALSE, row.names=FALSE, append=TRUE);
 
@@ -725,21 +859,12 @@ write.table(CyberTBHTable, file=paste(OutputPrefix, "L",
 ##################
 ##  Genes ordered to genome for GenomeCrawling
 ##################
-RankedGeneNames <- HuberGenes[tStatFilter];
-#RankedtStat <- tStat[tStatFilter];
-#RankedtStatNoCyberT <- tStatNoCyberT[tStatFilter]; 
-RankedLogFoldChange <- LogFoldChange[tStatFilter];
-RankedIntensity <- Intensity[tStatFilter];
-#RankedTotBiosamples <-  TotBiosamples[tStatFilter];
-RankedTotArrays <- TotArrays[tStatFilter];
-#pValue is already ranked  
-#pValueNoCyberT is already ranked  
 
 GenetStat <- rep(0, length(GenomeGenes));
 GenetStatNoCyberT <- rep(0, length(GenomeGenes));
 GeneLogFoldChange <- rep(0, length(GenomeGenes));
 GeneIntensity <- rep(0, length(GenomeGenes));
-GeneTotBiosamples <- rep(0, length(GenomeGenes));
+GeneTotBioSamples <- rep(0, length(GenomeGenes));
 GeneTotArrays <- rep(0, length(GenomeGenes));
 GenepValue <- rep(1, length(GenomeGenes))
 GenepValueNoCyberT <- rep(1, length(GenomeGenes));
@@ -750,23 +875,23 @@ GeneNames <- GenomeGenes;
 
 #### Output
 
-for (i in 1:length(RankedGeneNames)) {
+for (i in 1:length(HuberGenes)) {
 
-    GeneFilter <- as.logical(match(GeneNames, RankedGeneNames[i], nomatch=0));
+    GeneFilter <- as.logical(match(GeneNames, HuberGenes[i], nomatch=0));
 
-    GenetStat[GeneFilter] <- RankedtStat[i];
-    GenetStatNoCyberT[GeneFilter] <- RankedtStatNoCyberT[i] 
-    GeneLogFoldChange[GeneFilter] <- RankedLogFoldChange[i];
-    GeneIntensity[GeneFilter] <- RankedIntensity[i];
-    GeneTotBiosamples[GeneFilter] <- RankedTotBiosamples[i];
-    GeneTotArrays[GeneFilter] <- RankedTotArrays[i];
+    GenetStat[GeneFilter] <- tStat[i];
+    GenetStatNoCyberT[GeneFilter] <- tStatNoCyberT[i] 
+    GeneLogFoldChange[GeneFilter] <- LogFoldChange[i];
+    GeneIntensity[GeneFilter] <- RMSIntensity[i];
+    GeneTotBioSamples[GeneFilter] <- TotBioSamples[i];
+    GeneTotArrays[GeneFilter] <- TotArrays[i];
     GenepValue[GeneFilter] <- pValue[i];
     GenepValueNoCyberT[GeneFilter] <- pValueNoCyberT[i];
 
 }
 
 FilterHeaderTable <-  c("ID", "GenomePos", "tStat", "tStatNoCyberT", "pValue",
-                        "pValueNoCyberT", "LogFoldChng", "Intenisty",
+                        "pValueNoCyberT", "LogFoldChng", "RMSIntensity",
                         "BioSamples", "TotArrays");
 
 FilterHeader1 <- paste("Input Directory = ", InputDirectory, sep="");
@@ -785,7 +910,7 @@ FilterHeader8 <- c(paste("HuberConf = ", as.character(HuberConf), sep=""),
 
 SingleGeneTable <- cbind(GeneNames, GenePos, GenetStat, GenetStatNoCyberT,
                          GenepValue, GenepValueNoCyberT, GeneLogFoldChange,
-                         GeneIntensity, GeneTotBiosamples, GeneTotArrays);
+                         GeneIntensity, GeneTotBioSamples, GeneTotArrays);
 
 cat(FilterHeader1, file=paste(OutputPrefix, "L",
                      as.character(Lambda), ".GeCyTDS", sep=""), sep="\n");
