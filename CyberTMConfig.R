@@ -5,12 +5,12 @@ Lambda <- 6;
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- TRUE; # See Input section of this file more detail
+MatchedArrays <- FALSE; # See Input section of this file more detail
 
 #########  Permutation resampling Methods ONLY ##############
 MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
 BootstrapSample <- FALSE;
-CyberTOFF <- TRUE;  #For permutation methods only
+CyberTOFF <- FALSE;  #For permutation methods only
 TotalPermutations <- 2000;
 
 
