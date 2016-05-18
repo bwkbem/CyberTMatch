@@ -2,7 +2,13 @@
 MinProbes <- 2;
 MinArrays <- 4;  
 
-MatchedArrays <- TRUE; # See Input section of this file more detail
+MatchedArrays <- FALSE; # See Input section of this file more detail
+
+################ Permutation Parameters ##############
+
+MultCorrPerm <- FALSE;  #Long Run Times!!!!  Performs WY and BH with resampling
+BootstrapSample <- TRUE;
+TotalPermutations <- 2000;
 
 ######### Statistical Parameters ####################
 #PARAMETERS FOR LOWESS
@@ -418,11 +424,220 @@ tStatNoCyberT <- abs(LogFoldChange/StndErr);  #For no CyberT
 tStatFilterNoCyberT <- order(tStatNoCyberT, decreasing=TRUE);
 RankedtStatNoCyberT <- tStatNoCyberT[tStatFilterNoCyberT]; 
 RankedTotBioSamples <- TotBioSamples[tStatFilterNoCyberT];
+RankedGenes <- HuberGenes[tStatFilterNoCyberT];
 
 DOFnoCyberT <- RankedTotBioSamples - 1;   #For no CyberT
 pValueNoCyberT <- 2 * (1 - pt(RankedtStatNoCyberT, DOFnoCyberT));
 
 ############## Calculate Multiplicity p-values for CyberT ###############
+
+######################### Permutation Methods ############################
+              #####    Perform Permutation Resampling  ####
+#All data will be referenced based on relative rank determined by t-test
+#statistic
+
+    if (MultCorrPerm) {
+
+    PermFilter1 <- as.logical(match(RankedTotBioSamples, 2, nomatch=0));
+    PermFilter2 <- as.logical(match(RankedTotBioSamples, 3, nomatch=0));
+    PermFilter3 <- as.logical(match(RankedTotBioSamples, 4, nomatch=0));
+
+    SampletStat1 <- RankedtStatNoCyberT[PermFilter1];
+    SampletStat2 <- RankedtStatNoCyberT[PermFilter2];
+    SampletStat3 <- RankedtStatNoCyberT[PermFilter3];
+
+
+        
+#       SampletStat <- tStatNoCyberT;
+  
+        BStat1 <- rep(0, length(SampletStat1));
+        BStat2 <- rep(0, length(SampletStat2));
+        BStat3 <- rep(0, length(SampletStat3));
+
+        WYBStat1 <- rep(0, length(SampletStat1));
+        WYBStat2 <- rep(0, length(SampletStat2));
+        WYBStat3 <- rep(0, length(SampletStat3));
+
+        xNumOfHyp1 <- length(SampletStat1);
+        xNumOfHyp2 <- length(SampletStat2);
+        xNumOfHyp3 <- length(SampletStat3);
+
+        B <- TotalPermutations;
+
+        #####  Sample 1
+    
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat1 <- sample(SampletStat1, replace=TRUE);
+            } else {
+                PertStat1 <- sample(SampletStat1);
+            }
+        
+            for (k in 1:xNumOfHyp1) {
+                bStatk <- rep(0, xNumOfHyp1);
+                tStatk <- rep(SampletStat1[k], xNumOfHyp1);
+                bStatk[which(PertStat1[1:xNumOfHyp1] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat1[k] <- BStat1[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp1);
+            UStat[xNumOfHyp1] <- PertStat1[xNumOfHyp1];
+            WYBStat1[xNumOfHyp1] <- WYBStat1[xNumOfHyp1] + 1;
+            for (k in (xNumOfHyp1-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat1[k]);
+                if (UStat[k] >= SampletStat1[k]) {
+                    WYBStat1[k] <- WYBStat1[k] + 1
+                }
+            }   
+        }
+
+        WYpValue1 <- WYBStat1 / B;
+
+        Rank1 <- 1:xNumOfHyp1;
+        EstpValue1 <-  BStat1/(xNumOfHyp1 * B);
+    
+        BHpValuePerm1 <- EstpValue1 * xNumOfHyp1 / Rank1;
+        BHpValuePerm1[which(BHpValuePerm1 > 1)] <- 1;
+        for (i in Rank1) {
+            BHpValuePerm1[i] <- min(BHpValuePerm1[i:xNumOfHyp1]);   
+        }
+
+        #### Sample 2
+
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat2 <- sample(SampletStat2, replace=TRUE);
+            } else {
+                PertStat2 <- sample(SampletStat2);
+            }
+        
+            for (k in 1:xNumOfHyp2) {
+                bStatk <- rep(0, xNumOfHyp2);
+                tStatk <- rep(SampletStat2[k], xNumOfHyp2);
+                bStatk[which(PertStat2[1:xNumOfHyp2] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat2[k] <- BStat2[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp2);
+            UStat[xNumOfHyp2] <- PertStat2[xNumOfHyp2];
+            WYBStat2[xNumOfHyp2] <- WYBStat2[xNumOfHyp2] + 1;
+            for (k in (xNumOfHyp2-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat2[k]);
+                if (UStat[k] >= SampletStat2[k]) {
+                    WYBStat2[k] <- WYBStat2[k] + 1
+                }
+            }   
+        }
+
+        WYpValue2 <- WYBStat2 / B;
+
+        Rank2 <- 1:xNumOfHyp2;
+        EstpValue2 <-  BStat2/(xNumOfHyp2 * B);
+    
+        BHpValuePerm2 <- EstpValue2 * xNumOfHyp2 / Rank2;
+        BHpValuePerm2[which(BHpValuePerm2 > 1)] <- 1;
+        for (i in Rank2) {
+            BHpValuePerm2[i] <- min(BHpValuePerm2[i:xNumOfHyp2]);   
+        }
+
+       ###### Sample 3
+
+       for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat3 <- sample(SampletStat3, replace=TRUE);
+            } else {
+                PertStat3 <- sample(SampletStat3);
+            }
+        
+            for (k in 1:xNumOfHyp3) {
+                bStatk <- rep(0, xNumOfHyp3);
+                tStatk <- rep(SampletStat3[k], xNumOfHyp3);
+                bStatk[which(PertStat3[1:xNumOfHyp3] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat3[k] <- BStat3[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp1);
+            UStat[xNumOfHyp3] <- PertStat3[xNumOfHyp3];
+            WYBStat3[xNumOfHyp3] <- WYBStat3[xNumOfHyp3] + 1;
+            for (k in (xNumOfHyp3-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat3[k]);
+                if (UStat[k] >= SampletStat3[k]) {
+                    WYBStat3[k] <- WYBStat3[k] + 1
+                }
+            }   
+        }
+
+        WYpValue3 <- WYBStat3 / B;
+
+        Rank3 <- 1:xNumOfHyp3;
+        EstpValue3 <-  BStat3/(xNumOfHyp3 * B);
+    
+        BHpValuePerm3 <- EstpValue3 * xNumOfHyp3 / Rank3;
+        BHpValuePerm3[which(BHpValuePerm3 > 1)] <- 1;
+        for (i in Rank3) {
+            BHpValuePerm3[i] <- min(BHpValuePerm3[i:xNumOfHyp3]);   
+        }
+
+
+    
+    # Combine all three BHpvalue1-3 sets ordered to ranked tStat
+
+    BHpValuePerm <- rep(NA, length(RankedGenes));
+    BHGenes1 <- RankedGenes[PermFilter1];
+    BHGenes2 <- RankedGenes[PermFilter2];
+    BHGenes3 <- RankedGenes[PermFilter3];
+
+    for (i in 1:length(BHGenes1)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes1[i],
+                                               nomatch=0))] <- BHpValuePerm1[i];
+    }
+
+    for (i in 1:length(BHGenes2)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes2[i],
+                                               nomatch=0))] <- BHpValuePerm2[i];
+    }
+
+    for (i in 1:length(BHGenes3)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes3[i],
+                                               nomatch=0))] <- BHpValuePerm3[i];
+    }
+
+    # Combine all three WYpvalue1-3 sets ordered to ranked tStat
+
+    WYpValuePerm <- rep(NA, length(RankedGenes));
+    WYGenes1 <- RankedGenes[PermFilter1];
+    WYGenes2 <- RankedGenes[PermFilter2];
+    WYGenes3 <- RankedGenes[PermFilter3];
+
+    for (i in 1:length(WYGenes1)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes1[i],
+                                               nomatch=0))] <- WYpValue1[i];
+    }
+
+    for (i in 1:length(WYGenes2)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes2[i],
+                                               nomatch=0))] <- WYpValue2[i];
+    }
+
+    for (i in 1:length(WYGenes3)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes3[i],
+                                               nomatch=0))] <- WYpValue3[i];
+    }
+
+    TBHpValuePerm <- BHpValuePerm;
+    TWYpValuePerm <- WYpValuePerm;
+}
+
+########################### End of Permutation Methods ########################
 
 xNumOfHyp <- length(RankedtStatNoCyberT);
 Rank <- 1:xNumOfHyp;
@@ -434,6 +649,82 @@ BHpValue[which(BHpValue > 1)] <- 1;
 for (i in Rank) {
     BHpValue[i] <- min(BHpValue[i:xNumOfHyp]);   
 }
+
+#### BH sorted pValues #####
+#sortFilter <- order(pValueNoCyberT);
+#sortpValueNoCyberT <- pValueNoCyberT[sortFilter];
+#sortGenes <- RankedGenes[sortFilter];
+
+#sortBHpValue <- sortpValueNoCyberT * xNumOfHyp / Rank;
+#sortBHpValue[which(sortBHpValue > 1)] <- 1;
+#for (i in Rank) {
+#    sortBHpValue[i] <- min(sortBHpValue[i:xNumOfHyp]);   
+#}
+
+#sBHpValue <- rep(NA, length(RankedGenes));
+#for (i in 1:length(sortGenes)) {
+#    sBHpValue[as.logical(match(RankedGenes, sortGenes[i],
+#                                               nomatch=0))] <- sortBHpValue[i];
+#}
+
+#### BH performed for each degree of freedom separately
+
+BHFilter1 <- as.logical(match(RankedTotBioSamples, 2, nomatch=0));
+BHFilter2 <- as.logical(match(RankedTotBioSamples, 3, nomatch=0));
+BHFilter3 <- as.logical(match(RankedTotBioSamples, 4, nomatch=0));
+
+BHpValueIn1 <- pValueNoCyberT[BHFilter1];
+BHpValueIn2 <- pValueNoCyberT[BHFilter2];
+BHpValueIn3 <- pValueNoCyberT[BHFilter3];
+
+xBHNumOfHyp1 <- length(BHpValueIn1);
+BHRank1 <- 1:xBHNumOfHyp1;
+BHpValue1 <- BHpValueIn1 * xBHNumOfHyp1 / BHRank1;
+BHpValue1[which(BHpValue1 > 1)] <- 1;
+for (i in BHRank1) {
+    BHpValue1[i] <- min(BHpValue1[i:xBHNumOfHyp1]);
+}
+
+xBHNumOfHyp2 <- length(BHpValueIn2);
+BHRank2 <- 1:xBHNumOfHyp2;
+BHpValue2 <- BHpValueIn2 * xBHNumOfHyp2 / BHRank2;
+BHpValue2[which(BHpValue1 > 1)] <- 1;
+for (i in BHRank2) {
+    BHpValue2[i] <- min(BHpValue2[i:xBHNumOfHyp2]);
+}
+
+xBHNumOfHyp3 <- length(BHpValueIn3);
+BHRank3 <- 1:xBHNumOfHyp3;
+BHpValue3 <- BHpValueIn3 * xBHNumOfHyp3 / BHRank3;
+BHpValue3[which(BHpValue1 > 1)] <- 1;
+for (i in BHRank3) {
+    BHpValue3[i] <- min(BHpValue3[i:xBHNumOfHyp3]);
+}
+
+# Combine all three BHpvalue1-3 sets ordered to ranked tStat
+
+BHpValueMixed <- rep(NA, length(RankedGenes));
+BHGenes1 <- RankedGenes[BHFilter1];
+BHGenes2 <- RankedGenes[BHFilter2];
+BHGenes3 <- RankedGenes[BHFilter3];
+
+for (i in 1:length(BHGenes1)) {
+    BHpValueMixed[as.logical(match(RankedGenes, BHGenes1[i],
+                                               nomatch=0))] <- BHpValue1[i];
+}
+
+for (i in 1:length(BHGenes2)) {
+    BHpValueMixed[as.logical(match(RankedGenes, BHGenes2[i],
+                                               nomatch=0))] <- BHpValue2[i];
+}
+
+for (i in 1:length(BHGenes3)) {
+    BHpValueMixed[as.logical(match(RankedGenes, BHGenes3[i],
+                                               nomatch=0))] <- BHpValue3[i];
+}
+
+#####
+
 
 #PKu <- 1-(2 * (1 - pt(sum(RankedtStatNoCyberT), DegreesOfFreedom)));
 Pg <- 1 - pValueNoCyberT;
@@ -459,15 +750,19 @@ for (i in Rank) {
 TLambda <- "null"
 TRankedtStat <-  RankedtStatNoCyberT;
 TBHpValue <- BHpValue;
+TBHpValueMixed <- BHpValueMixed;
 TFreqpValue <- FreqpValue;
 TDeleuzepValue <- DeleuzepValue;
 TSidakpValue <- SidakpValue;
+TBonpValue <- BonpValue;
+THolmpValue <- HolmpValue;
 
+TGenes <- RankedGenes;
+TtStat <- RankedtStatNoCyberT;
+TTotBioSamples <- RankedTotBioSamples;
 
-
-
-for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) {
-
+for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30)) {
+               #(2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14
                  ##############################################
                  ####    CALCULATE ADJ STANDRD DEVIATION   #### 
                  ##############################################
@@ -520,6 +815,8 @@ for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) {
     #Calculate pValue for tStat with AdjStndError
     tStatFilter <- order(tStat, decreasing=TRUE);
     RankedtStat <- tStat[tStatFilter];
+    RankedTotBioSamples <- TotBioSamples[tStatFilter];
+    RankedGenes <- HuberGenes[tStatFilter];
 
     DegreesOfFreedom <- Lambda - 2;
     pValue <- 2 * (1 - pt(RankedtStat, DegreesOfFreedom));
@@ -527,6 +824,217 @@ for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) {
 
     #############Calculate Multiplicity p-values for CyberT###############
 
+
+######################### Permutation Methods ############################
+              #####    Perform Permutation Resampling  ####
+#All data will be referenced based on relative rank determined by t-test
+#statistic
+
+    if (MultCorrPerm) {
+
+    PermFilter1 <- as.logical(match(RankedTotBioSamples, 2, nomatch=0));
+    PermFilter2 <- as.logical(match(RankedTotBioSamples, 3, nomatch=0));
+    PermFilter3 <- as.logical(match(RankedTotBioSamples, 4, nomatch=0));
+
+    SampletStat1 <- RankedtStat[PermFilter1];
+    SampletStat2 <- RankedtStat[PermFilter2];
+    SampletStat3 <- RankedtStat[PermFilter3];
+
+
+        
+#       SampletStat <- tStatNoCyberT;
+  
+        BStat1 <- rep(0, length(SampletStat1));
+        BStat2 <- rep(0, length(SampletStat2));
+        BStat3 <- rep(0, length(SampletStat3));
+
+        WYBStat1 <- rep(0, length(SampletStat1));
+        WYBStat2 <- rep(0, length(SampletStat2));
+        WYBStat3 <- rep(0, length(SampletStat3));
+
+        xNumOfHyp1 <- length(SampletStat1);
+        xNumOfHyp2 <- length(SampletStat2);
+        xNumOfHyp3 <- length(SampletStat3);
+
+        B <- TotalPermutations;
+
+        #####  Sample 1
+    
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat1 <- sample(SampletStat1, replace=TRUE);
+            } else {
+                PertStat1 <- sample(SampletStat1);
+            }
+        
+            for (k in 1:xNumOfHyp1) {
+                bStatk <- rep(0, xNumOfHyp1);
+                tStatk <- rep(SampletStat1[k], xNumOfHyp1);
+                bStatk[which(PertStat1[1:xNumOfHyp1] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat1[k] <- BStat1[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp1);
+            UStat[xNumOfHyp1] <- PertStat1[xNumOfHyp1];
+            WYBStat1[xNumOfHyp1] <- WYBStat1[xNumOfHyp1] + 1;
+            for (k in (xNumOfHyp1-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat1[k]);
+                if (UStat[k] >= SampletStat1[k]) {
+                    WYBStat1[k] <- WYBStat1[k] + 1
+                }
+            }   
+        }
+
+        WYpValue1 <- WYBStat1 / B;
+
+        Rank1 <- 1:xNumOfHyp1;
+        EstpValue1 <-  BStat1/(xNumOfHyp1 * B);
+    
+        BHpValuePerm1 <- EstpValue1 * xNumOfHyp1 / Rank1;
+        BHpValuePerm1[which(BHpValuePerm1 > 1)] <- 1;
+        for (i in Rank1) {
+            BHpValuePerm1[i] <- min(BHpValuePerm1[i:xNumOfHyp1]);   
+        }
+
+        #### Sample 2
+
+        for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat2 <- sample(SampletStat2, replace=TRUE);
+            } else {
+                PertStat2 <- sample(SampletStat2);
+            }
+        
+            for (k in 1:xNumOfHyp2) {
+                bStatk <- rep(0, xNumOfHyp2);
+                tStatk <- rep(SampletStat2[k], xNumOfHyp2);
+                bStatk[which(PertStat2[1:xNumOfHyp2] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat2[k] <- BStat2[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp2);
+            UStat[xNumOfHyp2] <- PertStat2[xNumOfHyp2];
+            WYBStat2[xNumOfHyp2] <- WYBStat2[xNumOfHyp2] + 1;
+            for (k in (xNumOfHyp2-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat2[k]);
+                if (UStat[k] >= SampletStat2[k]) {
+                    WYBStat2[k] <- WYBStat2[k] + 1
+                }
+            }   
+        }
+
+        WYpValue2 <- WYBStat2 / B;
+
+        Rank2 <- 1:xNumOfHyp2;
+        EstpValue2 <-  BStat2/(xNumOfHyp2 * B);
+    
+        BHpValuePerm2 <- EstpValue2 * xNumOfHyp2 / Rank2;
+        BHpValuePerm2[which(BHpValuePerm2 > 1)] <- 1;
+        for (i in Rank2) {
+            BHpValuePerm2[i] <- min(BHpValuePerm2[i:xNumOfHyp2]);   
+        }
+
+       ###### Sample 3
+
+       for (b in 1:B) {
+
+            if (BootstrapSample) {
+                PertStat3 <- sample(SampletStat3, replace=TRUE);
+            } else {
+                PertStat3 <- sample(SampletStat3);
+            }
+        
+            for (k in 1:xNumOfHyp3) {
+                bStatk <- rep(0, xNumOfHyp3);
+                tStatk <- rep(SampletStat3[k], xNumOfHyp3);
+                bStatk[which(PertStat3[1:xNumOfHyp3] >= tStatk)] <- 1;
+                BStatk <- sum(bStatk);
+                BStat3[k] <- BStat3[k] + BStatk;
+            
+            }
+
+            UStat <- rep(0, xNumOfHyp1);
+            UStat[xNumOfHyp3] <- PertStat3[xNumOfHyp3];
+            WYBStat3[xNumOfHyp3] <- WYBStat3[xNumOfHyp3] + 1;
+            for (k in (xNumOfHyp3-1):1) {
+                UStat[k] <- max(UStat[k+1], PertStat3[k]);
+                if (UStat[k] >= SampletStat3[k]) {
+                    WYBStat3[k] <- WYBStat3[k] + 1
+                }
+            }   
+        }
+
+        WYpValue3 <- WYBStat3 / B;
+
+        Rank3 <- 1:xNumOfHyp3;
+        EstpValue3 <-  BStat3/(xNumOfHyp3 * B);
+    
+        BHpValuePerm3 <- EstpValue3 * xNumOfHyp3 / Rank3;
+        BHpValuePerm3[which(BHpValuePerm3 > 1)] <- 1;
+        for (i in Rank3) {
+            BHpValuePerm3[i] <- min(BHpValuePerm3[i:xNumOfHyp3]);   
+        }
+
+
+    
+    # Combine all three BHpvalue1-3 sets ordered to ranked tStat
+
+    BHpValuePerm <- rep(NA, length(RankedGenes));
+    BHGenes1 <- RankedGenes[PermFilter1];
+    BHGenes2 <- RankedGenes[PermFilter2];
+    BHGenes3 <- RankedGenes[PermFilter3];
+
+    for (i in 1:length(BHGenes1)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes1[i],
+                                               nomatch=0))] <- BHpValuePerm1[i];
+    }
+
+    for (i in 1:length(BHGenes2)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes2[i],
+                                               nomatch=0))] <- BHpValuePerm2[i];
+    }
+
+    for (i in 1:length(BHGenes3)) {
+        BHpValuePerm[as.logical(match(RankedGenes, BHGenes3[i],
+                                               nomatch=0))] <- BHpValuePerm3[i];
+    }
+
+    # Combine all three WYpvalue1-3 sets ordered to ranked tStat
+
+    WYpValuePerm <- rep(NA, length(RankedGenes));
+    WYGenes1 <- RankedGenes[PermFilter1];
+    WYGenes2 <- RankedGenes[PermFilter2];
+    WYGenes3 <- RankedGenes[PermFilter3];
+
+    for (i in 1:length(WYGenes1)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes1[i],
+                                               nomatch=0))] <- WYpValue1[i];
+    }
+
+    for (i in 1:length(WYGenes2)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes2[i],
+                                               nomatch=0))] <- WYpValue2[i];
+    }
+
+    for (i in 1:length(WYGenes3)) {
+        WYpValuePerm[as.logical(match(RankedGenes, WYGenes3[i],
+                                               nomatch=0))] <- WYpValue3[i];
+    }
+
+
+    TBHpValuePerm <- cbind(TBHpValuePerm, BHpValuePerm);
+    TWYpValuePerm <- cbind(TWYpValuePerm, WYpValuePerm);
+}
+    
+########################### End of Permutation Methods ########################
+
+    
     xNumOfHyp <- length(RankedtStat);
     Rank <- 1:xNumOfHyp;
 
@@ -538,6 +1046,68 @@ for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) {
         BHpValue[i] <- min(BHpValue[i:xNumOfHyp]);   
     }
 
+    #### BH performed for each degree of freedom separately
+
+    BHFilter1 <- as.logical(match(RankedTotBioSamples, 2, nomatch=0));
+    BHFilter2 <- as.logical(match(RankedTotBioSamples, 3, nomatch=0));
+    BHFilter3 <- as.logical(match(RankedTotBioSamples, 4, nomatch=0));
+
+    BHpValueIn1 <- pValue[BHFilter1];
+    BHpValueIn2 <- pValue[BHFilter2];
+    BHpValueIn3 <- pValue[BHFilter3];
+
+    xBHNumOfHyp1 <- length(BHpValueIn1);
+    BHRank1 <- 1:xBHNumOfHyp1;
+    BHpValue1 <- BHpValueIn1 * xBHNumOfHyp1 / BHRank1;
+    BHpValue1[which(BHpValue1 > 1)] <- 1;
+    for (i in BHRank1) {
+        BHpValue1[i] <- min(BHpValue1[i:xBHNumOfHyp1]);
+    }
+
+    xBHNumOfHyp2 <- length(BHpValueIn2);
+    BHRank2 <- 1:xBHNumOfHyp2;
+    BHpValue2 <- BHpValueIn2 * xBHNumOfHyp2 / BHRank2;
+    BHpValue2[which(BHpValue1 > 1)] <- 1;
+    for (i in BHRank2) {
+        BHpValue2[i] <- min(BHpValue2[i:xBHNumOfHyp2]);
+    }
+
+    xBHNumOfHyp3 <- length(BHpValueIn3);
+    BHRank3 <- 1:xBHNumOfHyp3;
+    BHpValue3 <- BHpValueIn3 * xBHNumOfHyp3 / BHRank3;
+    BHpValue3[which(BHpValue1 > 1)] <- 1;
+    for (i in BHRank3) {
+        BHpValue3[i] <- min(BHpValue3[i:xBHNumOfHyp3]);
+    }
+
+    # Combine all three BHpvalue1-3 sets ordered to ranked tStat
+
+    BHpValueMixed <- rep(NA, length(RankedGenes));
+    BHGenes1 <- RankedGenes[BHFilter1];
+    BHGenes2 <- RankedGenes[BHFilter2];
+    BHGenes3 <- RankedGenes[BHFilter3];
+
+    for (i in 1:length(BHGenes1)) {
+        BHpValueMixed[as.logical(match(RankedGenes, BHGenes1[i],
+                                               nomatch=0))] <- BHpValue1[i];
+    }
+
+    for (i in 1:length(BHGenes2)) {
+        BHpValueMixed[as.logical(match(RankedGenes, BHGenes2[i],
+                                               nomatch=0))] <- BHpValue2[i];
+    }
+
+    for (i in 1:length(BHGenes3)) {
+        BHpValueMixed[as.logical(match(RankedGenes, BHGenes3[i],
+                                               nomatch=0))] <- BHpValue3[i];
+    }
+
+
+#####
+
+    
+
+    
     PKu <- 1-(2 * (1 - pt(sum(RankedtStat), DegreesOfFreedom)));
     Pg <- 1 - pValue;
     DeleuzepValue <- PKu - Pg;
@@ -563,10 +1133,17 @@ for (Lambda in c(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) {
     TLambda <- c(TLambda, Lambda); 
     TRankedtStat <-  cbind(TRankedtStat, RankedtStat);
     TBHpValue <- cbind(TBHpValue, BHpValue);
+    TBHpValueMixed <- cbind(TBHpValueMixed, BHpValueMixed);
     TFreqpValue <- cbind(TFreqpValue, FreqpValue);
-    TDeleuzepValue <- cbind(TDeleuzepValue, DeleuzedpValue);
+    TDeleuzepValue <- cbind(TDeleuzepValue, DeleuzepValue);
     TSidakpValue <- cbind(TSidakpValue, SidakpValue);
-    
+    TBonpValue <- cbind(TBonpValue, BonpValue);
+    THolmpValue <- cbind(THolmpValue, HolmpValue);
+
+    TGenes <- cbind(TGenes, RankedGenes);
+    TtStat <- cbind(TtStat, RankedtStat);
+    TTotBioSamples <- cbind(TTotBioSamples, RankedTotBioSamples);
+
 } 
 
 
